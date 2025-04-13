@@ -74,6 +74,7 @@ flags.DEFINE_string('sample_method', 'cfg', help='sampling method, must be in [c
 flags.DEFINE_float('omega', 0.0, help='guidance strength for cfg sampling method')
 flags.DEFINE_bool('prd', True, help='evaluate precision and recall (F_beta), only evaluated with 50k samples')
 flags.DEFINE_bool('improved_prd', True, help='evaluate improved precision and recall, only evaluated with 50k samples')
+
 # CBDM hyperparameters
 flags.DEFINE_bool('cb', False, help='train with class-balancing(adjustment) loss')
 flags.DEFINE_float('tau', 1.0, help='weight for the class-balancing(adjustment) loss')
@@ -191,7 +192,6 @@ def train():
     elif FLAGS.data_type == 'cifar10lt':
         dataset = ImbalanceCIFAR10(
                 root=FLAGS.root,
-                # root='...',
                 imb_type='exp',
                 imb_factor=FLAGS.imb_factor,
                 rand_number=0,
@@ -201,7 +201,7 @@ def train():
                 download=True)
     elif FLAGS.data_type == 'cifar100lt':
         dataset = ImbalanceCIFAR100(
-                root='/GPFS/data/yimingqin/dd_code/backdoor/benchmarks/pytorch-ddpm/data',
+                root=FLAGS.root,
                 # root='...',
                 imb_type='exp',
                 imb_factor=FLAGS.imb_factor,
@@ -228,6 +228,7 @@ def train():
 
     # model setup
     FLAGS.num_class = 100 if 'cifar100' in FLAGS.data_type else 10
+    
     net_model = UNet(
         T=FLAGS.T, ch=FLAGS.ch, ch_mult=FLAGS.ch_mult, attn=FLAGS.attn,
         num_res_blocks=FLAGS.num_res_blocks, dropout=FLAGS.dropout,

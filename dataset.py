@@ -1,6 +1,7 @@
 import numpy as np
 import torchvision.datasets as datasets
-
+import torchvision.transforms as transforms
+import torch
 
 
 class ImbalanceCIFAR10(datasets.CIFAR100):
@@ -139,3 +140,43 @@ class ImbalanceCIFAR100(datasets.CIFAR100):
         for i in range(self.cls_num):
             cls_num_list.append(self.num_per_cls_dict[i])
         return cls_num_list
+
+if __name__ == '__main__':
+    # transform = transforms.Compose(
+    #     [transforms.ToTensor(),
+    #     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+    # trainset = IMBALANCECIFAR100(root='./data', train=True,
+    #                 download=True, transform=transform)
+    # trainloader = iter(trainset)
+    # data, label = next(trainloader)
+    # print(data.shape, label)
+    # import pdb; pdb.set_trace()
+
+    tran_transform=transforms.Compose([
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+            transforms.Resize([32, 32])
+        ])
+
+    dataset = ImbalanceCIFAR10(
+                root="./",
+                imb_type='exp',
+                imb_factor=0.01,
+                rand_number=0,
+                train=True,
+                transform=tran_transform,
+                target_transform=None,
+                download=True)
+    dataloader = torch.utils.data.DataLoader(
+        dataset, batch_size=128,
+        shuffle=True, num_workers=4, drop_last=True)
+    
+    def infiniteloop(dataloader):
+        while True:
+            for x, y in iter(dataloader):
+                yield x, y
+    
+    datalooper = infiniteloop(dataloader)
+
+    x_0, y_0 = next(datalooper)
