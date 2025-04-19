@@ -180,3 +180,55 @@ if __name__ == '__main__':
     datalooper = infiniteloop(dataloader)
 
     x_0, y_0 = next(datalooper)
+    print(x_0, y_0)
+
+    def class_counter(all_labels):
+        all_classes_count = torch.Tensor(np.unique(all_labels, return_counts=True)[1])
+        return all_classes_count / all_classes_count.sum()
+    weight = class_counter(dataset.targets)
+    print(weight)
+    # w_c = 1/frequency(c)
+    num_class = 10
+    beta_1 = 0.0001
+    beta_T = 0.02
+    T = 1000
+    betas_temperature_lambda = 0.5
+    def temperature_beta_func(betas, label): 
+        omega_c = 1 / weight[label]
+        print(omega_c)
+        omega_c_max = 1 / weight.min()
+        print(omega_c_max)
+        print((1 - betas_temperature_lambda * (omega_c / omega_c_max)))
+        return betas * (1 - betas_temperature_lambda * (omega_c / omega_c_max))
+    
+    # for label in y_0:
+    #     print(label.item())
+    sqrt_alphas_bar = torch.stack(
+        [getattr(self, f'sqrt_alphas_bar_label_{label.item()}') for label in y_0]
+    )
+
+    print(sqrt_alphas_bar.shape)
+
+    # for label in range(num_class):
+    #     # betas = torch.linspace(beta_1, beta_T, T).double()
+    #     # hyperparameter
+    #     betas = torch.linspace(beta_1, beta_T, T).double()
+    #     betas_new = temperature_beta_func(betas, label)
+    #     alphas = 1. - betas_new
+    #     alphas_bar = torch.cumprod(alphas, dim=0)
+    #     print(alphas_bar.shape)
+
+        # register_buffer(f'betas_label_{label}', betas_new)
+
+        # register_buffer(f'sqrt_alphas_bar_label_{label}', torch.sqrt(alphas_bar))
+        # register_buffer(f'sqrt_one_minus_alphas_bar_label_{label}', torch.sqrt(1. - alphas_bar))
+        # print(betas_new)
+
+        
+
+
+        
+
+
+
+

@@ -34,7 +34,7 @@ def topk(y, all_y, K):
 class GaussianDiffusionTrainer(nn.Module):
     def __init__(self,
                  model, beta_1, beta_T, T, dataset,
-                 num_class, cfg, cb, tau, weight, finetune, temperature_beta = False, temperature_beta_lamdba = None):
+                 num_class, cfg, cb, tau, weight, finetune):
         super().__init__()
 
         self.model = model
@@ -46,92 +46,32 @@ class GaussianDiffusionTrainer(nn.Module):
         self.tau = tau
         self.weight = weight
         self.finetune = finetune
-        self.temperature_beta = temperature_beta
-        self.temperature_beta_lamdba = temperature_beta_lamdba
 
-        if self.temperature_beta:
-            # check if num_class equals to the length of weight
-            betas_list = []
-            sqrt_alphas_bar_label_list = []
-            sqrt_one_minus_alphas_bar_list = []
+        self.register_buffer(
+            'betas', torch.linspace(beta_1, beta_T, T).double())
+        alphas = 1. - self.betas
+        alphas_bar = torch.cumprod(alphas, dim=0)
 
-            assert len(weight) == num_class
-            for label in range(num_class):
-                betas = torch.linspace(beta_1, beta_T, T).double()
-                betas_new = self.temperature_beta_func(betas, label)
-                # self.register_buffer(f'betas_label_{label}', betas_new)
-                betas_list.append(betas_new)
-                alphas = 1. - betas_new
-                alphas_bar = torch.cumprod(alphas, dim=0)
-                sqrt_alphas_bar_label = torch.sqrt(alphas_bar)
-                sqrt_one_minus_alphas_bar = torch.sqrt(1. - alphas_bar)
-                # self.register_buffer(
-                    # f'sqrt_alphas_bar_label_{label}', torch.sqrt(alphas_bar))
-                # self.register_buffer(
-                #     f'sqrt_one_minus_alphas_bar_label_{label}', torch.sqrt(1. - alphas_bar))
-                sqrt_alphas_bar_label_list.append(sqrt_alphas_bar_label)
-                sqrt_one_minus_alphas_bar_list.append(sqrt_one_minus_alphas_bar)
-            self.register_buffer('betas', torch.stack(betas_list)) # (num_class, T)
-            self.register_buffer('sqrt_alphas_bar_label', torch.stack(sqrt_alphas_bar_label_list)) # (num_class, T)
-            self.register_buffer('sqrt_one_minus_alphas_bar_label', torch.stack(sqrt_one_minus_alphas_bar_list)) # (num_class, T)
-                
-        else:            
-            self.register_buffer(
-                'betas', torch.linspace(beta_1, beta_T, T).double())
-            alphas = 1. - self.betas
-            alphas_bar = torch.cumprod(alphas, dim=0)
-
-            self.register_buffer(
-                'sqrt_alphas_bar', torch.sqrt(alphas_bar))
-            self.register_buffer(
-                'sqrt_one_minus_alphas_bar', torch.sqrt(1. - alphas_bar))
-        
-    def temperature_beta_func(self, beta, label):
-        omega_c = 1 / self.weight[label]
-        omega_c_max = 1 / self.weight.min()
-        return beta * (1 - self.temperature_beta_lamdba * (omega_c / omega_c_max))
-
+        self.register_buffer(
+            'sqrt_alphas_bar', torch.sqrt(alphas_bar))
+        self.register_buffer(
+            'sqrt_one_minus_alphas_bar', torch.sqrt(1. - alphas_bar))
 
     def forward(self, x_0, y_0, augm=None):
         """
         Algorithm 1.
-        x_0: (batch_size, 3, 32, 32)
-        y_0: (batch_size, )
         """
         # original codes
         t = torch.randint(self.T, size=(x_0.shape[0], ), device=x_0.device)
         noise = torch.randn_like(x_0) 
 
-        if self.temperature_beta:
-            # modify version of extract(self.sqrt_alphas_bar, t, x_0.shape), get sqrt_alphas_bar_label with y_0 and t, reshape into x_0.shape
-            # sqrt_alphas_bar_label.shape = (num_class, T), t.shape = (batch_size, )
-            # print("self.sqrt_alphas_bar_label\n", self.sqrt_alphas_bar_label)
-            # print("y_0\n", y_0)
-            # print("t\n", t)
-            sqrt_alphas_bar = self.sqrt_alphas_bar_label[y_0, t]  # Shape: (batch_size,)
-            # print(sqrt_alphas_bar)
-            sqrt_one_minus_alphas_bar = self.sqrt_one_minus_alphas_bar_label[y_0, t]  # Shape: (batch_size,)
-            # print(*([1] * (len(x_0.shape) - 1)))
-            sqrt_alphas_bar = sqrt_alphas_bar.view(-1, *([1] * (len(x_0.shape) - 1)))  # Shape: (batch_size, 1, 1, 1)
-            sqrt_one_minus_alphas_bar = sqrt_one_minus_alphas_bar.view(-1, *([1] * (len(x_0.shape) - 1)))  # Shape: (batch_size, 1, 1, 1)
-            # print(sqrt_alphas_bar.shape)
-
-            x_t = (
-                sqrt_alphas_bar * x_0 +
-                sqrt_one_minus_alphas_bar * noise
-            )
-
-
-        else:
-            x_t = (
-                extract(self.sqrt_alphas_bar, t, x_0.shape) * x_0 +
-                extract(self.sqrt_one_minus_alphas_bar, t, x_0.shape) * noise)
+        x_t = (
+            extract(self.sqrt_alphas_bar, t, x_0.shape) * x_0 +
+            extract(self.sqrt_one_minus_alphas_bar, t, x_0.shape) * noise)
 
         if self.cfg or self.cb:
             if torch.rand(1)[0] < 1/10:
                 y_0 = None
-
-        # return # debug
 
         h = self.model(x_t, t, y=y_0, augm=augm)
         loss = F.mse_loss(h, noise, reduction='none')
@@ -270,62 +210,3 @@ class GaussianDiffusionSampler(nn.Module):
                 x_t = mean + torch.exp(0.5 * log_var) * noise
 
         return torch.clip(x_t, -1, 1), y
-
-if __name__ == '__main__':
-    import torchvision.transforms as transforms
-    from dataset import ImbalanceCIFAR10
-    tran_transform=transforms.Compose([
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-            transforms.Resize([32, 32])
-        ])
-
-    dataset = ImbalanceCIFAR10(
-                root="./",
-                imb_type='exp',
-                imb_factor=0.01,
-                rand_number=0,
-                train=True,
-                transform=tran_transform,
-                target_transform=None,
-                download=True)
-    dataloader = torch.utils.data.DataLoader(
-        dataset, batch_size=8,
-        shuffle=True, num_workers=4, drop_last=True)
-    
-    def infiniteloop(dataloader):
-        while True:
-            for x, y in iter(dataloader):
-                yield x, y
-    
-    datalooper = infiniteloop(dataloader)
-
-    x_0, y_0 = next(datalooper)
-
-    def class_counter(all_labels):
-        all_classes_count = torch.Tensor(np.unique(all_labels, return_counts=True)[1])
-        return all_classes_count / all_classes_count.sum()
-    weight = class_counter(dataset.targets)
-
-    trainer = GaussianDiffusionTrainer(
-        None, 1e-4, 0.02, 8, dataset,
-        10, .1, None, None, weight, None, True, 0.5).to('cpu')
-    print(x_0.shape, y_0.shape)
-    
-    loss_ddpm = trainer(x_0, y_0, augm = None)
-    
-    # print(getattr(trainer, f'sqrt_alphas_bar_label_2'))
-    # print([getattr(trainer, f'sqrt_alphas_bar_label_{label.item()}') for label in y_0])
-    # print(torch.stack([getattr(trainer, f'sqrt_alphas_bar_label_{label.item()}') for label in y_0]))
-
-    pass
-    # model = GaussianDiffusionTrainer()
-    # print(model)
-    # model = GaussianDiffusionSampler()
-    # print(model)
-    # print(model.predict_xstart_from_eps())
-    # print(model.predict_xstart_from_xprev())
-    # print(model.p_mean_variance())
-    # print(model.forward())
-    # print(model.q_mean_variance

@@ -84,13 +84,6 @@ flags.DEFINE_string('finetuned_logdir', '', help='logdir for the new model, wher
                      the pretrained model')
 flags.DEFINE_integer('ckpt_step', 0, help='step to reload the pretained checkpoint')
 
-# peiyang & Babak hyperparameters
-flags.DEFINE_bool('temperature_beta', False, help='adapt the noise schedule per class and also apply adaptive temperature scaling during sampling')
-# flags.DEFINE_bool('λ', False, help='change beta with λ ∈ [0, 1] as a hyperparameter') # don't use strange symbols in flags. revision:
-flags.DEFINE_float('temperature_beta_lambda', 1.0, help='change beta with λ ∈ [0, 1] as a hyperparameter')
-
-
- 
 device = torch.device('cuda:0')
 
 
@@ -251,7 +244,7 @@ def train():
     sched = torch.optim.lr_scheduler.LambdaLR(optim, lr_lambda=warmup_lr)
     trainer = GaussianDiffusionTrainer(
         net_model, FLAGS.beta_1, FLAGS.beta_T, FLAGS.T, dataset,
-        FLAGS.num_class, FLAGS.cfg, FLAGS.cb, FLAGS.tau, weight, FLAGS.finetune, FLAGS.temperature_beta, FLAGS.temperature_beta_lambda).to(device)
+        FLAGS.num_class, FLAGS.cfg, FLAGS.cb, FLAGS.tau, weight, FLAGS.finetune).to(device)
     net_sampler = GaussianDiffusionSampler(
         net_model, FLAGS.beta_1, FLAGS.beta_T, FLAGS.T, FLAGS.num_class, FLAGS.img_size, FLAGS.var_type).to(device)
     ema_sampler = GaussianDiffusionSampler(
