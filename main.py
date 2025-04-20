@@ -53,7 +53,7 @@ flags.DEFINE_bool('logit', False, help='use logit adjustment or not')
 flags.DEFINE_bool('augm', False, help='whether to use ADA augmentation')
 flags.DEFINE_bool('cfg', False, help='whether to train unconditional generation with with 10\%  probability')
 # Dataset
-flags.DEFINE_string('root', './', help='path of dataset')
+flags.DEFINE_string('root', './cifar_dataset', help='path of dataset')
 flags.DEFINE_string('data_type', 'cifar100', help='data type, must be in [cifar10, cifar100, cifar10lt, cifar100lt]')
 flags.DEFINE_float('imb_factor', 0.01, help='imb_factor for long tail dataset')
 flags.DEFINE_float('num_class', 0, help='number of class of the pretrained model')
