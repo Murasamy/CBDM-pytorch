@@ -130,9 +130,9 @@ def get_inception_and_fid_score(images, labels, fid_cache, num_images=None,
       
         print(FLAGS.data_type)
         if FLAGS.data_type == "cifar100" or FLAGS.data_type == "cifar100lt":
-           feats = np.load('/mnt/workspace/dlly/ucm3/stats/cifar100_feats.npy')
+           feats = np.load('/home/basadi2/CBDM-pytorch/stats/cifar100_feats.npy')
         elif FLAGS.data_type == "cifar10" or FLAGS.data_type == "cifar10lt":
-           feats = np.load('/mnt/workspace/dlly/ucm3/stats/cifar10_feats.npy')
+           feats = np.load('/home/basadi2/CBDM-pytorch/stats/cifar10_feats.npy')
         feats = torch.Tensor(feats)
         if isinstance(fid_acts, np.ndarray):
             fid_acts = torch.Tensor(fid_acts)
@@ -154,9 +154,9 @@ def get_inception_and_fid_score(images, labels, fid_cache, num_images=None,
     if FLAGS.improved_prd and len(fid_acts)==50000:
         print(FLAGS.data_type)
         if FLAGS.data_type == "cifar100" or FLAGS.data_type == "cifar100lt":
-           feats = np.load('/mnt/workspace/dlly/ucm3/stats/cifar100_feats.npy')
+           feats = np.load('/home/basadi2/CBDM-pytorch/stats/cifar100_feats.npy')
         elif FLAGS.data_type == "cifar10" or FLAGS.data_type == "cifar10lt":
-           feats = np.load('/mnt/workspace/dlly/ucm3/stats/cifar10_feats.npy')
+           feats = np.load('/home/basadi2/CBDM-pytorch/stats/stats/cifar10_feats.npy')
         if isinstance(fid_acts, torch.Tensor):
             fid_acts = fid_acts.numpy()
         ipr = IPR(32, k=5, num_samples=50000, model='InceptionV3')
