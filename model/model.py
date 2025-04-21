@@ -160,11 +160,12 @@ class ResBlock(nn.Module):
 
 class UNet(nn.Module):
     def __init__(self, T, ch, ch_mult, attn, num_res_blocks, dropout,
-                 cond, augm, num_class):
+                 cond, augm, num_class, freeze_down_latent_label = False):
         super().__init__()
         assert all([i < len(ch_mult) for i in attn]), 'attn index out of bound'
         tdim = ch * 4
         self.time_embedding = TimeEmbedding(T, ch, tdim)
+        self.freeze_down_latent_label = freeze_down_latent_label
     
         if cond:
             self.label_embedding = nn.Embedding(num_class, tdim)
@@ -262,27 +263,40 @@ class UNet(nn.Module):
         # Label embedding for conditional generation 
         if y is not None and self.label_embedding is not None:
             assert y.shape[0] == x.shape[0]
-            temb = temb + self.label_embedding(y)
+            temb_mixed = temb + self.label_embedding(y)
 
         # Label embedding for conditional generation 
         if augm is not None and self.augm_embedding is not None:
             assert augm.shape[0] == x.shape[0]
-            temb = temb + self.augm_embedding(augm)
+            temb_mixed = temb + self.augm_embedding(augm)
 
-        # Downsampling
-        h = self.head(x)
-        hs = [h]
-        for layer in self.downblocks:
-            h = layer(h, temb)
-            hs.append(h)
-        # Middle
-        for layer in self.middleblocks:
-            h = layer(h, temb)
-        # Upsampling
-        for layer in self.upblocks:
-            if isinstance(layer, ResBlock):
-                h = torch.cat([h, hs.pop()], dim=1)
-            h = layer(h, temb)
+        if self.freeze_down_latent_label:
+            # Downsampling
+            h = self.head(x)
+            hs = [h]
+            for layer in self.downblocks:
+                h = layer(h, temb)
+                hs.append(h)
+            # Middle
+            for layer in self.middleblocks:
+                h = layer(h, temb)
+            # Upsampling
+            for layer in self.upblocks:
+                if isinstance(layer, ResBlock):
+                    h = torch.cat([h, hs.pop()], dim=1)
+                h = layer(h, temb_mixed)
+        else:
+            for layer in self.downblocks:
+                h = layer(h, temb_mixed)
+                hs.append(h)
+            # Middle
+            for layer in self.middleblocks:
+                h = layer(h, temb_mixed)
+            # Upsampling
+            for layer in self.upblocks:
+                if isinstance(layer, ResBlock):
+                    h = torch.cat([h, hs.pop()], dim=1)
+                h = layer(h, temb)
         h = self.tail(h)
 
         assert len(hs) == 0

@@ -464,6 +464,7 @@ def train():
 
         # freeze_non_upsampling_layers()
         net_model.freeze_non_upsampling_layers()
+        net_model.freeze_down_latent_label = True
         optim = torch.optim.Adam(filter(lambda p: p.requires_grad, net_model.parameters()), lr=FLAGS.lr)
         sched = torch.optim.lr_scheduler.LambdaLR(optim, lr_lambda=warmup_lr)
 
@@ -558,6 +559,7 @@ def train():
         torch.save(ckpt, os.path.join(FLAGS.logdir, 'ckpt_{}_upsampler.pt'.format(step)))
         writer.close()
         net_model.unfreeze_all_layers()
+        net_model.freeze_down_latent_label = False
 
 def eval():
     FLAGS.num_class = 100 if 'cifar100' in FLAGS.data_type else 10
