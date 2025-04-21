@@ -34,7 +34,7 @@ def topk(y, all_y, K):
 class GaussianDiffusionTrainer(nn.Module):
     def __init__(self,
                  model, beta_1, beta_T, T, dataset,
-                 num_class, cfg, cb, tau, weight, finetune, temperature_beta = False, temperature_beta_lamdba = None):
+                 num_class, cfg, cb, tau, weight, finetune, temperature_beta = False, temperature_beta_lamdba = None, edm2_truncate = False, edm2_truncate_portion =  0):
         super().__init__()
 
         self.model = model
