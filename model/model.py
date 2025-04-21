@@ -257,24 +257,53 @@ class UNet(nn.Module):
             param.requires_grad = True
 
     def forward(self, x, t, y=None, augm=None):
-        # Timestep embedding
-        temb = self.time_embedding(t)
 
-        # Label embedding for conditional generation 
-        if y is not None and self.label_embedding is not None:
-            assert y.shape[0] == x.shape[0]
-            temb_mixed = temb + self.label_embedding(y)
+        if not self.freeze_down_latent_label:
+            # Timestep embedding
+            temb = self.time_embedding(t)
 
-        # Label embedding for conditional generation 
-        if augm is not None and self.augm_embedding is not None:
-            assert augm.shape[0] == x.shape[0]
-            temb_mixed = temb + self.augm_embedding(augm)
-            
-        h = self.head(x)
-        hs = [h]
-        if self.freeze_down_latent_label:
+            # Label embedding for conditional generation 
+            if y is not None and self.label_embedding is not None:
+                assert y.shape[0] == x.shape[0]
+                temb = temb + self.label_embedding(y)
+
+            # Label embedding for conditional generation 
+            if augm is not None and self.augm_embedding is not None:
+                assert augm.shape[0] == x.shape[0]
+                temb = temb + self.augm_embedding(augm)
+
+            h = self.head(x)
+            hs = [h]
             # Downsampling
-            
+            for layer in self.downblocks:
+                h = layer(h, temb)
+                hs.append(h)
+            # Middle
+            for layer in self.middleblocks:
+                h = layer(h, temb)
+            # Upsampling
+            for layer in self.upblocks:
+                if isinstance(layer, ResBlock):
+                    h = torch.cat([h, hs.pop()], dim=1)
+                h = layer(h, temb)
+
+        elif self.freeze_down_latent_label:
+            temb = self.time_embedding(t)
+            temb_mixed = temb.clone()
+
+            # Label embedding for conditional generation 
+            if y is not None and self.label_embedding is not None:
+                assert y.shape[0] == x.shape[0]
+                temb_mixed = temb + self.label_embedding(y)
+
+            # Label embedding for conditional generation 
+            if augm is not None and self.augm_embedding is not None:
+                assert augm.shape[0] == x.shape[0]
+                temb_mixed = temb + self.augm_embedding(augm)
+
+            h = self.head(x)
+            hs = [h]
+
             for layer in self.downblocks:
                 h = layer(h, temb)
                 hs.append(h)
@@ -286,18 +315,6 @@ class UNet(nn.Module):
                 if isinstance(layer, ResBlock):
                     h = torch.cat([h, hs.pop()], dim=1)
                 h = layer(h, temb_mixed)
-        else:
-            for layer in self.downblocks:
-                h = layer(h, temb_mixed)
-                hs.append(h)
-            # Middle
-            for layer in self.middleblocks:
-                h = layer(h, temb_mixed)
-            # Upsampling
-            for layer in self.upblocks:
-                if isinstance(layer, ResBlock):
-                    h = torch.cat([h, hs.pop()], dim=1)
-                h = layer(h, temb)
         h = self.tail(h)
 
         assert len(hs) == 0
