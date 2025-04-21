@@ -48,6 +48,8 @@ class GaussianDiffusionTrainer(nn.Module):
         self.finetune = finetune
         self.temperature_beta = temperature_beta
         self.temperature_beta_lamdba = temperature_beta_lamdba
+        self.edm2_truncate = edm2_truncate
+        self.edm2_truncate_portion = edm2_truncate_portion
 
         if self.temperature_beta:
             # check if num_class equals to the length of weight
@@ -106,7 +108,7 @@ class GaussianDiffusionTrainer(nn.Module):
             t = torch.randint(self.T, size=(x_0.shape[0], ), device=x_0.device)
 
         noise = torch.randn_like(x_0) 
-        
+
         if self.temperature_beta:
             # modify version of extract(self.sqrt_alphas_bar, t, x_0.shape), get sqrt_alphas_bar_label with y_0 and t, reshape into x_0.shape
             # sqrt_alphas_bar_label.shape = (num_class, T), t.shape = (batch_size, )
