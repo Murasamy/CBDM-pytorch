@@ -315,10 +315,9 @@ class UNet(nn.Module):
                 if isinstance(layer, ResBlock):
                     h = torch.cat([h, hs.pop()], dim=1)
                 h = layer(h, temb_mixed)
+
         h = self.tail(h)
-
         assert len(hs) == 0
-
         return h
 
 
