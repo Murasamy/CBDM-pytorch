@@ -107,6 +107,8 @@ def get_inception_and_fid_score(images, labels, fid_cache, num_images=None,
     else:
         is_score = (np.mean(scores), np.std(scores))
 
+    print('end calculation inception score:', is_score)
+
     # FID Score
     print('calculate fid')
     f = np.load(fid_cache)
@@ -121,6 +123,7 @@ def get_inception_and_fid_score(images, labels, fid_cache, num_images=None,
         m1 = np.mean(fid_acts, axis=0)
         s1 = np.cov(fid_acts, rowvar=False)
     fid_score = calculate_frechet_distance(m1, s1, m2, s2, use_torch=use_torch)
+    print('end calculation fid:', fid_score)
 
     # prd
     print('calculate prd (F_beta)')
@@ -146,7 +149,8 @@ def get_inception_and_fid_score(images, labels, fid_cache, num_images=None,
             enforce_balance=True)
         prd_data = compute_prd_from_embedding(eval_data=fid_acts,ref_data=feats,num_clusters=num_clusters,num_angles=1001,num_runs=10,enforce_balance=True)
         prd_score = prd_to_max_f_beta_pair(prd_data[0], prd_data[1], beta=8) # precision/recall
-        # print('prd_score', prd_score)
+        print('prd_score', prd_score)
+
 
     # improved prd
     print('calculate improved prd (precision/recall)')
@@ -165,6 +169,8 @@ def get_inception_and_fid_score(images, labels, fid_cache, num_images=None,
         im_prd = (metric.precision, metric.recall)
         # print('precision =', metric.precision)
         # print('recall =', metric.recall)
+        print('improved prd score', im_prd)
+
 
     print('fid', fid_score)
     print('is', is_score)
