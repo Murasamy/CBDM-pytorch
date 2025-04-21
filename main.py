@@ -372,6 +372,7 @@ def train():
     elif FLAGS.seperate_upsampler:
         # start training as unconditional model
         # after training FLAG.seperate_unconditional_step, freeze the model and train the upsampler
+        print('This idea comes from Knowledge Sharing via Unconditional Training at Lower Resolutions')
         with trange(FLAGS.ckpt_step, FLAGS.seperate_unconditional_step, dynamic_ncols=True) as pbar:
             for step in pbar:
                 # train
@@ -466,6 +467,7 @@ def train():
         optim = torch.optim.Adam(filter(lambda p: p.requires_grad, net_model.parameters()), lr=FLAGS.lr)
         sched = torch.optim.lr_scheduler.LambdaLR(optim, lr_lambda=warmup_lr)
 
+        print("Training the upsampler")
         with trange(FLAGS.seperate_unconditional_step, FLAGS.seperate_upsampler_step, dynamic_ncols=True) as pbar:
             for step in pbar:
                 # train
@@ -543,9 +545,18 @@ def train():
                         metrics['step'] = step
                         f.write(json.dumps(metrics) + '\n')
 
-
-        
-
+        # save the upsampler model
+        ckpt = {
+            'net_model': net_model.state_dict(),
+            'ema_model': ema_model.state_dict(),
+            'sched': sched.state_dict(),
+            'optim': optim.state_dict(),
+            'step': step,
+            'fixed_x_T': fixed_x_T,
+        }
+        torch.save(ckpt, os.path.join(FLAGS.logdir, 'ckpt_{}_upsampler.pt'.format(step)))
+        writer.close()
+        net_model.unfreeze_all_layers()
 
 def eval():
     FLAGS.num_class = 100 if 'cifar100' in FLAGS.data_type else 10
