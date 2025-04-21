@@ -269,11 +269,12 @@ class UNet(nn.Module):
         if augm is not None and self.augm_embedding is not None:
             assert augm.shape[0] == x.shape[0]
             temb_mixed = temb + self.augm_embedding(augm)
-
+            
+        h = self.head(x)
+        hs = [h]
         if self.freeze_down_latent_label:
             # Downsampling
-            h = self.head(x)
-            hs = [h]
+            
             for layer in self.downblocks:
                 h = layer(h, temb)
                 hs.append(h)
