@@ -258,7 +258,7 @@ def train():
     sched = torch.optim.lr_scheduler.LambdaLR(optim, lr_lambda=warmup_lr)
     trainer = GaussianDiffusionTrainer(
         net_model, FLAGS.beta_1, FLAGS.beta_T, FLAGS.T, dataset,
-        FLAGS.num_class, FLAGS.cfg, FLAGS.cb, FLAGS.tau, weight, FLAGS.finetune, FLAGS.temperature_beta, FLAGS.temperature_beta_lambda).to(device)
+        FLAGS.num_class, FLAGS.cfg, FLAGS.cb, FLAGS.tau, weight, FLAGS.finetune, FLAGS.temperature_beta, FLAGS.temperature_beta_lambda, FLAGS.edm2_truncate, FLAGS.edm2_truncate_position).to(device)
     net_sampler = GaussianDiffusionSampler(
         net_model, FLAGS.beta_1, FLAGS.beta_T, FLAGS.T, FLAGS.num_class, FLAGS.img_size, FLAGS.var_type).to(device)
     ema_sampler = GaussianDiffusionSampler(

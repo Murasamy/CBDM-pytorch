@@ -99,9 +99,14 @@ class GaussianDiffusionTrainer(nn.Module):
         y_0: (batch_size, )
         """
         # original codes
-        t = torch.randint(self.T, size=(x_0.shape[0], ), device=x_0.device)
-        noise = torch.randn_like(x_0) 
+        if self.edm2_truncate:
+            lower_bound = int(self.edm2_truncate_portion * self.T)
+            t = torch.randint(lower_bound, self.T, size=(x_0.shape[0], ), device=x_0.device)
+        else:
+            t = torch.randint(self.T, size=(x_0.shape[0], ), device=x_0.device)
 
+        noise = torch.randn_like(x_0) 
+        
         if self.temperature_beta:
             # modify version of extract(self.sqrt_alphas_bar, t, x_0.shape), get sqrt_alphas_bar_label with y_0 and t, reshape into x_0.shape
             # sqrt_alphas_bar_label.shape = (num_class, T), t.shape = (batch_size, )
