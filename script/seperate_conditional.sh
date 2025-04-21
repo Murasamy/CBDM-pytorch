@@ -1,5 +1,3 @@
-conda activate opence-v1.6.1;
-
 CUDA_VISIBLE_DEVICES=0,1,2,3 python main.py --train  \
         --flagfile ./config/cifar100.txt --parallel \
         --logdir ./logs/cifar100lt_seperate_umsampler \
