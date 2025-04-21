@@ -254,6 +254,7 @@ class GaussianDiffusionSampler(nn.Module):
         if method == 'uncond':
             y = None
         else:
+            # uniform sampling
             y = torch.randint(0, self.num_class, (len(x_t),)).to(x_t.device)
 
         with torch.no_grad():
