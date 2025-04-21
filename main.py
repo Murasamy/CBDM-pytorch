@@ -372,7 +372,7 @@ def train():
     elif FLAGS.seperate_upsampler:
         # start training as unconditional model
         # after training FLAG.seperate_unconditional_step, freeze the model and train the upsampler
-        print('This idea comes from Knowledge Sharing via Unconditional Training at Lower Resolutions')
+        print('This idea comes from "Knowledge Sharing via Unconditional Training at Lower Resolutions" published in CVPR 2024')
         with trange(FLAGS.ckpt_step, FLAGS.seperate_unconditional_step, dynamic_ncols=True) as pbar:
             for step in pbar:
                 # train
