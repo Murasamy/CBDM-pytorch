@@ -468,7 +468,8 @@ def train():
         sched = torch.optim.lr_scheduler.LambdaLR(optim, lr_lambda=warmup_lr)
 
         print("Training the upsampler")
-        with trange(FLAGS.seperate_unconditional_step, FLAGS.seperate_upsampler_step, dynamic_ncols=True) as pbar:
+        # with trange(FLAGS.seperate_unconditional_step, FLAGS.seperate_upsampler_step, dynamic_ncols=True) as pbar:
+        with trange(FLAGS.seperate_unconditional_step, FLAGS.seperate_unconditional_step + FLAGS.seperate_upsampler_step, dynamic_ncols=True) as pbar:
             for step in pbar:
                 # train
                 optim.zero_grad()
