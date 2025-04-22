@@ -5,7 +5,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python main_second_half.py --train  \
         --logdir ./logs/cifar100lt_seperate_umsampler \
         --seperate_upsampler True \
         --freeze_down_latent_label False \
-        --ckpt_step 200000 \
+        --ckpt_step 200002 \
         --seperate_unconditional_step 199999 \
         --seperate_upsampler_step 100003 \
         --conditional \
