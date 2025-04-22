@@ -381,6 +381,7 @@ def train():
             ckpt = torch.load(os.path.join(FLAGS.finetuned_logdir,
                                         'ckpt_{}.pt'.format(FLAGS.ckpt_step)), map_location='cpu')
             net_model.load_state_dict(ckpt['ema_model'])
+            print('load the ckpt from {}'.format(FLAGS.ckpt_step))
         elif FLAGS.ckpt_step != 0 and FLAGS.ckpt_step > FLAGS.seperate_unconditional_step:
             ckpt = torch.load(os.path.join(FLAGS.finetuned_logdir,
                                         'ckpt_{}_unconditional.pt'.format(FLAGS.ckpt_step)), map_location='cpu')
@@ -430,6 +431,8 @@ def train():
         
         print('This idea comes from "Knowledge Sharing via Unconditional Training at Lower Resolutions" published in CVPR 2024')
         # judge based on the step of ckpt_step, load the ckpt
+        if FLAGS.ckpt_step != 0 and FLAGS.ckpt_step > FLAGS.seperate_unconditional_step:
+            print('skip the unconditional training')
         if FLAGS.ckpt_step != 0 and FLAGS.ckpt_step <= FLAGS.seperate_unconditional_step:
             with trange(FLAGS.ckpt_step, FLAGS.seperate_unconditional_step, dynamic_ncols=True) as pbar:
                 for step in pbar:
