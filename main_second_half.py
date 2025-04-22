@@ -377,10 +377,13 @@ def train():
             T=FLAGS.T, ch=FLAGS.ch, ch_mult=FLAGS.ch_mult, attn=FLAGS.attn,
             num_res_blocks=FLAGS.num_res_blocks, dropout=FLAGS.dropout,
             cond=FLAGS.conditional, augm=FLAGS.augm, num_class=FLAGS.num_class, freeze_down_latent_label=FLAGS.freeze_down_latent_label)
-        if FLAGS.ckpt_step != 0 :
+        if FLAGS.ckpt_step != 0 and FLAGS.ckpt_step <= FLAGS.seperate_unconditional_step:
             ckpt = torch.load(os.path.join(FLAGS.finetuned_logdir,
                                         'ckpt_{}.pt'.format(FLAGS.ckpt_step)), map_location='cpu')
             net_model.load_state_dict(ckpt['ema_model'])
+        elif FLAGS.ckpt_step != 0 and FLAGS.ckpt_step > FLAGS.seperate_unconditional_step:
+            ckpt = torch.load(os.path.join(FLAGS.finetuned_logdir,
+                                        'ckpt_{}_unconditional.pt'.format(FLAGS.ckpt_step)), map_location='cpu')
         ema_model = copy.deepcopy(net_model)
 
         # training setup
@@ -419,102 +422,103 @@ def train():
         for param in net_model.parameters():
             model_size += param.data.nelement()
         print('Model params: %.2f M' % (model_size / 1024 / 1024))
-
-
+        
 
 
         # start training as unconditional model
         # after training FLAG.seperate_unconditional_step, freeze the model and train the upsampler
-        net_model.freeze_down_latent_label = True
+        
         print('This idea comes from "Knowledge Sharing via Unconditional Training at Lower Resolutions" published in CVPR 2024')
-        with trange(FLAGS.ckpt_step, FLAGS.seperate_unconditional_step, dynamic_ncols=True) as pbar:
-            for step in pbar:
-                # train
-                optim.zero_grad()
-                x_0, y_0 = next(datalooper)
+        # judge based on the step of ckpt_step, load the ckpt
+        if FLAGS.ckpt_step != 0 and FLAGS.ckpt_step <= FLAGS.seperate_unconditional_step:
+            with trange(FLAGS.ckpt_step, FLAGS.seperate_unconditional_step, dynamic_ncols=True) as pbar:
+                for step in pbar:
+                    # train
+                    optim.zero_grad()
+                    x_0, y_0 = next(datalooper)
 
-                # when using ADA, the augmentation parameters will also be returned by the dataloader
-                augm = None
-                if type(x_0) == list:
-                    x_0, augm = x_0
-                    augm = augm.to(device)
+                    # when using ADA, the augmentation parameters will also be returned by the dataloader
+                    augm = None
+                    if type(x_0) == list:
+                        x_0, augm = x_0
+                        augm = augm.to(device)
 
-                x_0 = x_0.to(device)
-                # y_0 = y_0.to(device)
+                    x_0 = x_0.to(device)
+                    # y_0 = y_0.to(device)
 
-                loss_ddpm, loss_reg = trainer(x_0, None, augm)
-                loss_ddpm = loss_ddpm.mean()
-                loss_reg = loss_reg.mean()
-                loss = loss_ddpm + loss_reg if FLAGS.cb and loss_reg > 0 else loss_ddpm
-                loss.backward()
+                    loss_ddpm, loss_reg = trainer(x_0, None, augm)
+                    loss_ddpm = loss_ddpm.mean()
+                    loss_reg = loss_reg.mean()
+                    loss = loss_ddpm + loss_reg if FLAGS.cb and loss_reg > 0 else loss_ddpm
+                    loss.backward()
 
-                torch.nn.utils.clip_grad_norm_(
-                    net_model.parameters(), FLAGS.grad_clip)
-                optim.step()
-                sched.step()
-                ema(net_model, ema_model, FLAGS.ema_decay)
+                    torch.nn.utils.clip_grad_norm_(
+                        net_model.parameters(), FLAGS.grad_clip)
+                    optim.step()
+                    sched.step()
+                    ema(net_model, ema_model, FLAGS.ema_decay)
 
-                # logs
-                writer.add_scalar('loss', loss, step)
-                writer.add_scalar('loss_ddpm', loss_ddpm, step)
-                writer.add_scalar('loss_reg', loss_reg, step)
-                pbar.set_postfix(loss='%.5f' % loss)
+                    # logs
+                    writer.add_scalar('loss', loss, step)
+                    writer.add_scalar('loss_ddpm', loss_ddpm, step)
+                    writer.add_scalar('loss_reg', loss_reg, step)
+                    pbar.set_postfix(loss='%.5f' % loss)
 
-                # sample
-                if step != FLAGS.ckpt_step and step % FLAGS.sample_step == 0:
-                    net_model.eval()
-                    with torch.no_grad():
-                        x_0, _  = ema_sampler(fixed_x_T)
-                        grid = (make_grid(x_0) + 1) / 2
-                        path = os.path.join(
-                            FLAGS.logdir, 'sample', '%d.png' % step)
-                        save_image(grid, path)
-                        writer.add_image('sample', grid, step)
-                    net_model.train()
+                    # sample
+                    if step != FLAGS.ckpt_step and step % FLAGS.sample_step == 0:
+                        net_model.eval()
+                        with torch.no_grad():
+                            x_0, _  = ema_sampler(fixed_x_T)
+                            grid = (make_grid(x_0) + 1) / 2
+                            path = os.path.join(
+                                FLAGS.logdir, 'sample', '%d.png' % step)
+                            save_image(grid, path)
+                            writer.add_image('sample', grid, step)
+                        net_model.train()
 
-                # save
-                if FLAGS.save_step > 0 and step % FLAGS.save_step == 0:
-                    ckpt = {
-                        'net_model': net_model.state_dict(),
-                        'ema_model': ema_model.state_dict(),
-                        'sched': sched.state_dict(),
-                        'optim': optim.state_dict(),
-                        'step': step,
-                        'fixed_x_T': fixed_x_T,
-                    }
-                    torch.save(ckpt, os.path.join(FLAGS.logdir, 'ckpt_{}.pt'.format(step)))
+                    # save
+                    if FLAGS.save_step > 0 and step % FLAGS.save_step == 0:
+                        ckpt = {
+                            'net_model': net_model.state_dict(),
+                            'ema_model': ema_model.state_dict(),
+                            'sched': sched.state_dict(),
+                            'optim': optim.state_dict(),
+                            'step': step,
+                            'fixed_x_T': fixed_x_T,
+                        }
+                        torch.save(ckpt, os.path.join(FLAGS.logdir, 'ckpt_{}.pt'.format(step)))
 
-                # evaluate
-                if FLAGS.eval_step > 0 and step % FLAGS.eval_step == 0:
-                    # net_IS, net_FID, _ = evaluate(net_sampler, net_model)
-                    ema_IS, ema_FID = evaluate(ema_sampler, ema_model, False)
-                    metrics = {
-                        'IS': ema_IS[0],
-                        'IS_std': ema_IS[1],
-                        'FID': ema_FID
-                    }
-                    print(step, metrics)
-                    pbar.write(
-                        '%d/%d ' % (step, FLAGS.total_steps) +
-                        ', '.join('%s:%.5f' % (k, v) for k, v in metrics.items()))
-                    for name, value in metrics.items():
-                        writer.add_scalar(name, value, step)
-                    writer.flush()
-                    with open(os.path.join(FLAGS.logdir, 'eval.txt'), 'a') as f:
-                        metrics['step'] = step
-                        f.write(json.dumps(metrics) + '\n')
+                    # evaluate
+                    if FLAGS.eval_step > 0 and step % FLAGS.eval_step == 0:
+                        # net_IS, net_FID, _ = evaluate(net_sampler, net_model)
+                        ema_IS, ema_FID = evaluate(ema_sampler, ema_model, False)
+                        metrics = {
+                            'IS': ema_IS[0],
+                            'IS_std': ema_IS[1],
+                            'FID': ema_FID
+                        }
+                        print(step, metrics)
+                        pbar.write(
+                            '%d/%d ' % (step, FLAGS.total_steps) +
+                            ', '.join('%s:%.5f' % (k, v) for k, v in metrics.items()))
+                        for name, value in metrics.items():
+                            writer.add_scalar(name, value, step)
+                        writer.flush()
+                        with open(os.path.join(FLAGS.logdir, 'eval.txt'), 'a') as f:
+                            metrics['step'] = step
+                            f.write(json.dumps(metrics) + '\n')
 
-        # save the unconditional model
-        ckpt = {
-            'net_model': net_model.state_dict(),
-            'ema_model': ema_model.state_dict(),
-            'sched': sched.state_dict(),
-            'optim': optim.state_dict(),
-            'step': step,
-            'fixed_x_T': fixed_x_T,
-        }
-        torch.save(ckpt, os.path.join(FLAGS.logdir, 'ckpt_{}_unconditional.pt'.format(step)))
-        # writer.close()
+            # save the unconditional model
+            ckpt = {
+                'net_model': net_model.state_dict(),
+                'ema_model': ema_model.state_dict(),
+                'sched': sched.state_dict(),
+                'optim': optim.state_dict(),
+                'step': step,
+                'fixed_x_T': fixed_x_T,
+            }
+            torch.save(ckpt, os.path.join(FLAGS.logdir, 'ckpt_{}_unconditional.pt'.format(step)))
+            # writer.close()
 
         # freeze_non_upsampling_layers()
         net_model.freeze_non_upsampling_layers()
