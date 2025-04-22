@@ -421,8 +421,6 @@ def train():
         print('Model params: %.2f M' % (model_size / 1024 / 1024))
 
 
-
-
         # start training as unconditional model
         # after training FLAG.seperate_unconditional_step, freeze the model and train the upsampler
         net_model.freeze_down_latent_label = True

@@ -373,10 +373,10 @@ def train():
 
 
     elif FLAGS.seperate_upsampler:
-        net_model = UNet(
-            T=FLAGS.T, ch=FLAGS.ch, ch_mult=FLAGS.ch_mult, attn=FLAGS.attn,
-            num_res_blocks=FLAGS.num_res_blocks, dropout=FLAGS.dropout,
-            cond=FLAGS.conditional, augm=FLAGS.augm, num_class=FLAGS.num_class, freeze_down_latent_label=FLAGS.freeze_down_latent_label)
+        # net_model = UNet(
+        #     T=FLAGS.T, ch=FLAGS.ch, ch_mult=FLAGS.ch_mult, attn=FLAGS.attn,
+        #     num_res_blocks=FLAGS.num_res_blocks, dropout=FLAGS.dropout,
+        #     cond=FLAGS.conditional, augm=FLAGS.augm, num_class=FLAGS.num_class, freeze_down_latent_label=FLAGS.freeze_down_latent_label)
         if FLAGS.ckpt_step != 0 and FLAGS.ckpt_step <= FLAGS.seperate_unconditional_step:
             ckpt = torch.load(os.path.join(FLAGS.logdir,
                                         'ckpt_{}.pt'.format(FLAGS.ckpt_step)))
@@ -386,6 +386,11 @@ def train():
             print(os.path.join(FLAGS.logdir, 'ckpt_{}_unconditional.pt'.format(FLAGS.ckpt_step)))
             ckpt = torch.load(os.path.join(FLAGS.logdir,
                                         'ckpt_{}_unconditional.pt'.format(FLAGS.ckpt_step)), map_location='cpu')
+            net_model.load_state_dict(ckpt['ema_model'])
+            if FLAGS.freeze_down_latent_label: 
+                net_model.freeze_down_latent_label = True
+                print('freeze the downsampling layers and train the upsampler')
+            
         ema_model = copy.deepcopy(net_model)
 
         # training setup
