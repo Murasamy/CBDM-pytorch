@@ -378,12 +378,13 @@ def train():
             num_res_blocks=FLAGS.num_res_blocks, dropout=FLAGS.dropout,
             cond=FLAGS.conditional, augm=FLAGS.augm, num_class=FLAGS.num_class, freeze_down_latent_label=FLAGS.freeze_down_latent_label)
         if FLAGS.ckpt_step != 0 and FLAGS.ckpt_step <= FLAGS.seperate_unconditional_step:
-            ckpt = torch.load(os.path.join(FLAGS.finetuned_logdir,
-                                        'ckpt_{}.pt'.format(FLAGS.ckpt_step)), map_location='cpu')
+            ckpt = torch.load(os.path.join(FLAGS.logdir,
+                                        'ckpt_{}.pt'.format(FLAGS.ckpt_step)))
             net_model.load_state_dict(ckpt['ema_model'])
             print('load the ckpt from {}'.format(FLAGS.ckpt_step))
         elif FLAGS.ckpt_step != 0 and FLAGS.ckpt_step > FLAGS.seperate_unconditional_step:
-            ckpt = torch.load(os.path.join(FLAGS.finetuned_logdir,
+            print(os.path.join(FLAGS.logdir, 'ckpt_{}_unconditional.pt'.format(FLAGS.ckpt_step)))
+            ckpt = torch.load(os.path.join(FLAGS.logdir,
                                         'ckpt_{}_unconditional.pt'.format(FLAGS.ckpt_step)), map_location='cpu')
         ema_model = copy.deepcopy(net_model)
 
