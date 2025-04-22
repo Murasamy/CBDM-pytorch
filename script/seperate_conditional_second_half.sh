@@ -6,7 +6,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python main_second_half.py --train  \
         --seperate_upsampler True \
         --freeze_down_latent_label False \
         --ckpt_step 200002 \
-        --seperate_unconditional_step 199999 \
+        --seperate_unconditional_step 200001 \
         --seperate_upsampler_step 100003 \
         --conditional \
         --data_type cifar100lt --imb_factor 0.01 --img_size 32 \
