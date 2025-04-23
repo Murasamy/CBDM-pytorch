@@ -617,7 +617,7 @@ def eval():
     model = UNet(
         T=FLAGS.T, ch=FLAGS.ch, ch_mult=FLAGS.ch_mult, attn=FLAGS.attn,
         num_res_blocks=FLAGS.num_res_blocks, dropout=FLAGS.dropout,
-        cond=FLAGS.conditional, augm=FLAGS.augm, num_class=FLAGS.num_class)
+        cond=FLAGS.conditional, augm=FLAGS.augm, num_class=FLAGS.num_class, freeze_down_latent_label=FLAGS.freeze_down_latent_label)
     sampler = GaussianDiffusionSampler(
         model, FLAGS.beta_1, FLAGS.beta_T, FLAGS.T, FLAGS.num_class, FLAGS.img_size, FLAGS.var_type).to(device)
 
