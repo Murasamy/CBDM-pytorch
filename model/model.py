@@ -166,6 +166,9 @@ class UNet(nn.Module):
         tdim = ch * 4
         self.time_embedding = TimeEmbedding(T, ch, tdim)
         self.freeze_down_latent_label = freeze_down_latent_label
+        
+        if freeze_down_latent_label:
+            print("Freeze down latent label")
     
         if cond:
             self.label_embedding = nn.Embedding(num_class, tdim)
