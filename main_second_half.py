@@ -384,9 +384,9 @@ def train():
             net_model.load_state_dict(ckpt['ema_model'])
             print('load the ckpt from {}'.format(FLAGS.ckpt_step))
         elif FLAGS.ckpt_step != 0 and FLAGS.ckpt_step > FLAGS.seperate_unconditional_step:
-            print(os.path.join(FLAGS.logdir, 'ckpt_{}_unconditional.pt loaded'.format(FLAGS.ckpt_step)))
+            print(os.path.join(FLAGS.logdir, 'ckpt_{}.pt loaded'.format(FLAGS.ckpt_step)))
             ckpt = torch.load(os.path.join(FLAGS.logdir,
-                                        'ckpt_{}_unconditional.pt'.format(FLAGS.ckpt_step)), map_location='cpu')
+                                        'ckpt_{}.pt'.format(FLAGS.ckpt_step)), map_location='cpu')
             net_model.load_state_dict(ckpt['ema_model'])
             if FLAGS.freeze_down_latent_label: 
                 net_model.freeze_down_latent_label = True
