@@ -626,7 +626,7 @@ def eval():
     FLAGS.sample_name = '{}_N{}_STEP{}'.format(FLAGS.sample_name, FLAGS.num_images, FLAGS.ckpt_step)
 
     # load ema model (almost always better than the model) and evaluate
-    ckpt = torch.load(os.path.join(FLAGS.logdir, 'ckpt_{}.pt'.format(FLAGS.ckpt_step)), map_location='cpu')
+    ckpt = torch.load(os.path.join(FLAGS.logdir, 'ckpt_{}_629.pt'.format(FLAGS.ckpt_step)), map_location='cpu')
 
     # evaluate IS/FID
     if 'cifar100' in FLAGS.data_type:
