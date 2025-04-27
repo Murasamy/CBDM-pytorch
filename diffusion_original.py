@@ -96,7 +96,7 @@ class GaussianDiffusionSampler(nn.Module):
 
         self.model = model
         self.T = T
-        self.num_class =    num_class
+        self.num_class =  num_class
         self.img_size = img_size
         self.var_type = var_type
         
