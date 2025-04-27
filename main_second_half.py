@@ -657,6 +657,7 @@ def eval():
 
     if not FLAGS.sampled:
         model.load_state_dict(ckpt['ema_model'])
+        print("model.freeze_down_latent_label", model.freeze_down_latent_label)
     else:
         model = None
 
