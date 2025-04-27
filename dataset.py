@@ -187,27 +187,33 @@ if __name__ == '__main__':
         return all_classes_count / all_classes_count.sum()
     weight = class_counter(dataset.targets)
     print(weight)
-    # w_c = 1/frequency(c)
-    num_class = 10
-    beta_1 = 0.0001
-    beta_T = 0.02
-    T = 1000
-    betas_temperature_lambda = 0.5
-    def temperature_beta_func(betas, label): 
-        omega_c = 1 / weight[label]
-        print(omega_c)
-        omega_c_max = 1 / weight.min()
-        print(omega_c_max)
-        print((1 - betas_temperature_lambda * (omega_c / omega_c_max)))
-        return betas * (1 - betas_temperature_lambda * (omega_c / omega_c_max))
-    
-    # for label in y_0:
-    #     print(label.item())
-    sqrt_alphas_bar = torch.stack(
-        [getattr(self, f'sqrt_alphas_bar_label_{label.item()}') for label in y_0]
-    )
 
-    print(sqrt_alphas_bar.shape)
+
+    # CBDL self balancing dataloader
+    # def balancing_dataset()
+
+
+    # w_c = 1/frequency(c)
+    # num_class = 10
+    # beta_1 = 0.0001
+    # beta_T = 0.02
+    # T = 1000
+    # betas_temperature_lambda = 0.5
+    # def temperature_beta_func(betas, label): 
+    #     omega_c = 1 / weight[label]
+    #     print(omega_c)
+    #     omega_c_max = 1 / weight.min()
+    #     print(omega_c_max)
+    #     print((1 - betas_temperature_lambda * (omega_c / omega_c_max)))
+    #     return betas * (1 - betas_temperature_lambda * (omega_c / omega_c_max))
+    
+    # # for label in y_0:
+    # #     print(label.item())
+    # sqrt_alphas_bar = torch.stack(
+    #     [getattr(self, f'sqrt_alphas_bar_label_{label.item()}') for label in y_0]
+    # )
+
+    # print(sqrt_alphas_bar.shape)
 
     # for label in range(num_class):
     #     # betas = torch.linspace(beta_1, beta_T, T).double()
