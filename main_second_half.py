@@ -592,7 +592,7 @@ def train():
                         'step': step,
                         'fixed_x_T': fixed_x_T,
                     }
-                    torch.save(ckpt, os.path.join(FLAGS.logdir, 'ckpt_{}.pt'.format(step)))
+                    torch.save(ckpt, os.path.join(FLAGS.logdir, 'ckpt_{}_stage2.pt'.format(step)))
 
                 # evaluate
                 if FLAGS.eval_step > 0 and step % FLAGS.eval_step == 0:
