@@ -1,4 +1,4 @@
-python main.py \
+python main_eval.py \
     --flagfile ./logs/cifar100lt_ddpm/flagfile.txt \
     --logdir ./logs/cifar100lt_ddpm \
     --fid_cache ./stats/cifar100.train.npz \
