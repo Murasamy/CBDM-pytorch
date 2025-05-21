@@ -190,6 +190,7 @@ class GaussianDiffusionSampler(nn.Module):
         """
         x_t = x_T.clone()
         y = None
+        print('x_T', x_T.shape)
 
         if method == 'uncond':
             y = None
