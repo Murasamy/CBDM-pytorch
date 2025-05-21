@@ -424,7 +424,10 @@ def eval():
 
     if FLAGS.parallel:
         sampler = torch.nn.DataParallel(sampler)
-    FLAGS.sample_name = '{}_N{}_STEP{}'.format(FLAGS.sample_name, FLAGS.num_images, FLAGS.ckpt_step)
+    if FLAGS.same_label:
+        FLAGS.sample_name = '{}_same_STEP{}'.format(FLAGS.sample_name, FLAGS.ckpt_step)
+    else:
+        FLAGS.sample_name = '{}_N{}_STEP{}'.format(FLAGS.sample_name, FLAGS.num_images, FLAGS.ckpt_step)
 
     # load ema model (almost always better than the model) and evaluate
     ckpt = torch.load(os.path.join(FLAGS.logdir, 'ckpt_{}.pt'.format(FLAGS.ckpt_step)), map_location='cpu')
@@ -447,7 +450,9 @@ def eval():
     print("Improved PRD:%6.5f, RECALL:%7.5f \n" % (ipr[0], ipr[1]))
     print("PRD PRECISION FOR 100 CLASSES:%6.5f, RECALL:%7.5f \n" % (prd_score[0], prd_score[1]))
 
-    with open(os.path.join(FLAGS.logdir,  'res_ema_{}.txt'.format(FLAGS.sample_name)), 'a+') as f:
+    # with open(os.path.join(FLAGS.logdir,  'res_ema_{}.txt'.format(FLAGS.sample_name)), 'a+') as f:
+    with open(os.path.join(FLAGS.logdir,  'res_ema_{}_{}_{}.txt'.format(FLAGS.sample_method, FLAGS.omega, FLAGS.sample_name)), 'a+') as f:
+        
         f.write("Settings: NUM:{} EPOCH:{}, OMEGA:{}, METHOD:{} \n" .format (FLAGS.num_images, FLAGS.ckpt_step, FLAGS.omega,FLAGS.sample_method))
         f.write("Model(EMA): IS:%6.5f(%.5f), FID/CIFAR100:%7.5f \n" % (IS, IS_std, FID))
         f.write("Improved PRD:%6.5f, RECALL:%7.5f \n" % (ipr[0], ipr[1]))
