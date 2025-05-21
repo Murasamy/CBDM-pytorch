@@ -1,5 +1,6 @@
 # only use cuda1
-CUDA_VISIBLE_DEVICES=1 python main_eval.py \
+# CUDA_VISIBLE_DEVICES=1 \
+python main_eval.py \
     --flagfile ./logs/cifar100lt_ddpm_cond/flagfile.txt \
     --logdir ./logs/cifar100lt_ddpm_cond \
     --fid_cache ./stats/cifar100.train.npz \
