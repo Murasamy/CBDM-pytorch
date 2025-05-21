@@ -119,6 +119,7 @@ def evaluate(sampler, model, sampled):
             labels = []
             desc = 'generating images'
             if FLAGS.same_label:
+                
                 # use the same labels as the training dataset
                 if FLAGS.data_type == 'cifar10':
                     dataset = CIFAR10(
@@ -155,8 +156,11 @@ def evaluate(sampler, model, sampled):
                             target_transform=None,
                             download=True)
                 all_labels = dataset.targets
+                FLAGS.num_images = len(all_labels)
+                print('num_images', FLAGS.num_images)
                 print('Use same label to evaluate dataset {} contains {} images with {} classes'.format(
                     FLAGS.data_type, len(all_labels), len(np.unique(all_labels))))
+                
                 # stop here
                 # raise ValueError('Use same label to evaluate dataset {} contains {} images with {} classes'.format(
                     # FLAGS.data_type, len(all_labels), len(np.unique(all_labels))))
