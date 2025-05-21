@@ -13,7 +13,7 @@ from torchvision.datasets import CIFAR10, CIFAR100
 from torchvision.utils import make_grid, save_image
 from torchvision import transforms
 
-from diffusion_original import GaussianDiffusionTrainer, GaussianDiffusionSampler
+from diffusion_eval import GaussianDiffusionTrainer, GaussianDiffusionSampler
 from model.model_original import UNet
 from utils.augmentation import *
 from dataset import ImbalanceCIFAR100, ImbalanceCIFAR10
@@ -158,17 +158,23 @@ def evaluate(sampler, model, sampled):
                 print('Use same label to evaluate dataset {} contains {} images with {} classes'.format(
                     FLAGS.data_type, len(all_labels), len(np.unique(all_labels))))
                 # stop here
-                raise ValueError('Use same label to evaluate dataset {} contains {} images with {} classes'.format(
-                    FLAGS.data_type, len(all_labels), len(np.unique(all_labels))))
+                # raise ValueError('Use same label to evaluate dataset {} contains {} images with {} classes'.format(
+                    # FLAGS.data_type, len(all_labels), len(np.unique(all_labels))))
             for i in trange(0, FLAGS.num_images, FLAGS.batch_size, desc=desc):
                 batch_size = min(FLAGS.batch_size, FLAGS.num_images - i)
                 x_T = torch.randn((batch_size, 3, FLAGS.img_size, FLAGS.img_size))
+
+                if FLAGS.same_label:
+
+                    all_labels = dataset.targets
+                    selected_labels = all_labels[i:i+batch_size]
+                else:
+                    selected_labels = None
                 
-
-
                 batch_images, batch_labels = sampler(x_T.to(device),
                                                      omega=FLAGS.omega,
-                                                     method=FLAGS.sample_method)
+                                                     method=FLAGS.sample_method,
+                                                     selected_labels=selected_labels)
                 images.append((batch_images.cpu() + 1) / 2)
                 if FLAGS.sample_method!='uncond' and batch_labels is not None:
                     labels.append(batch_labels.cpu())

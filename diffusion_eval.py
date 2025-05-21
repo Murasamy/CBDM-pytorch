@@ -90,7 +90,7 @@ class GaussianDiffusionTrainer(nn.Module):
         return loss, loss_reg + 1/4 * loss_com
 
 class GaussianDiffusionSampler(nn.Module):
-    def __init__(self, model, beta_1, beta_T, T, num_class, img_size=32, var_type='fixedlarge'):
+    def __init__(self, model, beta_1, beta_T, T, num_class, img_size=32, var_type='fixedlarge', assemble_labels=False):
         assert var_type in ['fixedlarge', 'fixedsmall']
         super().__init__()
 
@@ -184,7 +184,7 @@ class GaussianDiffusionSampler(nn.Module):
 
         return model_mean, model_log_var
 
-    def forward(self, x_T, omega=0.0, method='cfg'):
+    def forward(self, x_T, omega=0.0, method='cfg', example_label=None):
         """
         Algorithm 2.
         """
@@ -193,8 +193,13 @@ class GaussianDiffusionSampler(nn.Module):
 
         if method == 'uncond':
             y = None
-        else:
-            y = torch.randint(0, self.num_class, (len(x_t),)).to(x_t.device)
+        elif method != 'uncond' and example_label is not None: 
+            # use the same label as the training set
+            print('cfg method is used and y is not None. ')
+            y = example_label.to(x_T.device)
+        elif method == 'cfg' and y is not None:
+            print('cfg method is used and y randomly sampled. ')
+            y = torch.randint(0, self.num_class, (len(x_T),)).to(x_T.device)
 
         with torch.no_grad():
             for time_step in tqdm(reversed(range(0, self.T)), total=self.T):
