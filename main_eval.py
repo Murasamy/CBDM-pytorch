@@ -203,8 +203,10 @@ def evaluate(sampler, model, sampled):
             labels = np.load(os.path.join(FLAGS.logdir, '{}_{}_labels_ema_{}.npy'.format(
                                                 FLAGS.sample_method, FLAGS.omega,
                                                 FLAGS.sample_name)))
+    rand_idx = np.random.choice(len(images), 256, replace=False)
     save_image(
-        torch.tensor(images[:256]),
+        # torch.tensor(images[256:]),  # select randomly 256 images
+        torch.tensor(images[rand_idx]),      
         os.path.join(FLAGS.logdir, 'visual_ema_{}_{}_{}.png'.format(
                                     FLAGS.sample_method, FLAGS.omega, FLAGS.sample_name)),
         nrow=16)
