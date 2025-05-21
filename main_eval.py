@@ -163,6 +163,7 @@ def evaluate(sampler, model, sampled):
             for i in trange(0, FLAGS.num_images, FLAGS.batch_size, desc=desc):
                 batch_size = min(FLAGS.batch_size, FLAGS.num_images - i)
                 x_T = torch.randn((batch_size, 3, FLAGS.img_size, FLAGS.img_size))
+                print('x_T', x_T.shape)
 
                 if FLAGS.same_label:
 
