@@ -184,7 +184,7 @@ class GaussianDiffusionSampler(nn.Module):
 
         return model_mean, model_log_var
 
-    def forward(self, x_T, omega=0.0, method='cfg', example_label=None):
+    def forward(self, x_T, omega=0.0, method='cfg', selected_labels=None):
         """
         Algorithm 2.
         """
@@ -193,11 +193,11 @@ class GaussianDiffusionSampler(nn.Module):
 
         if method == 'uncond':
             y = None
-        elif method != 'uncond' and example_label is not None: 
+        elif method != 'uncond' and selected_labels is not None: 
             # use the same label as the training set
             print('cfg method is used and y is not None. ')
-            y = example_label.to(x_T.device)
-        elif method == 'cfg' and y is not None:
+            y = selected_labels.to(x_T.device)
+        elif method == 'cfg' and y is None:
             print('cfg method is used and y randomly sampled. ')
             y = torch.randint(0, self.num_class, (len(x_T),)).to(x_T.device)
 
