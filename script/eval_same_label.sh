@@ -2,9 +2,10 @@ python main_eval.py \
     --flagfile ./logs/cifar100lt_ddpm/flagfile.txt \
     --logdir ./logs/cifar100lt_ddpm \
     --fid_cache ./stats/cifar100.train.npz \
-    --ckpt_step 200000 \
+    --ckpt_step 300000 \
     --num_images 50000 --batch_size 64 \
     --notrain \
     --eval \
+    --same_label True \
     --sample_method cfg  --omega 0.8 \
     --data_type cifar100lt

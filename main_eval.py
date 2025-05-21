@@ -74,7 +74,7 @@ flags.DEFINE_string('sample_method', 'cfg', help='sampling method, must be in [c
 flags.DEFINE_float('omega', 0.0, help='guidance strength for cfg sampling method')
 flags.DEFINE_bool('prd', True, help='evaluate precision and recall (F_beta), only evaluated with 50k samples')
 flags.DEFINE_bool('improved_prd', True, help='evaluate improved precision and recall, only evaluated with 50k samples')
-flags.DEFINE_bool('same_label', True, help='use the same label as the training dataset')
+flags.DEFINE_bool('same_label', False, help='use the same label as the training dataset')
 
 # CBDM hyperparameters
 flags.DEFINE_bool('cb', False, help='train with class-balancing(adjustment) loss')
