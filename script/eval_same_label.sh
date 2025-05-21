@@ -5,7 +5,7 @@ python main_eval.py \
     --logdir ./logs/cifar100lt_ddpm_cond \
     --fid_cache ./stats/cifar100.train.npz \
     --ckpt_step 300000 \
-    --num_images 50000 --batch_size 512 \
+    --num_images 10847 --batch_size 512 \
     --notrain \
     --eval \
     --same_label True \
