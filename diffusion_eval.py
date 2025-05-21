@@ -190,8 +190,8 @@ class GaussianDiffusionSampler(nn.Module):
         """
         x_t = x_T.clone()
         y = None
-        print('x_T', x_T.shape) # torch.Size([16, 3, 32, 32])
-        print('selected_labels', selected_labels.shape) # torch.Size([16, 3, 32, 32])
+        # print('x_T', x_T.shape) # torch.Size([16, 3, 32, 32])
+        # print('selected_labels', selected_labels.shape) # torch.Size([16, 3, 32, 32])
 
         if method == 'uncond':
             y = None
@@ -200,7 +200,6 @@ class GaussianDiffusionSampler(nn.Module):
             print('cfg method is used and y is not None. ')
             y = torch.tensor(selected_labels).to(x_T.device)
             print('y', y)
-            print(y.shape[0], x_t.shape[0])
 
         elif method == 'cfg' and y is None:
             print('cfg method is used and y randomly sampled. ')
