@@ -168,8 +168,11 @@ def evaluate(sampler, model, sampled):
                 if FLAGS.same_label:
                     all_labels = dataset.targets
                     selected_labels = all_labels[i:i+batch_size]
+                    selected_labels = torch.tensor(selected_labels)
                 else:
                     selected_labels = None
+
+                
                 
                 print('x_T', x_T.shape) # torch.Size([64, 3, 32, 32])
                 print("batch_size", batch_size)
