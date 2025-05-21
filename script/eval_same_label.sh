@@ -9,6 +9,6 @@ python main_eval.py \
     --notrain \
     --eval \
     --same_label True \
-    --sample_method cfg  --omega 0 \
+    --sample_method cfg  --omega 0.8 \
     --data_type cifar100lt
 
