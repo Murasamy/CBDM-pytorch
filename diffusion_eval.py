@@ -198,6 +198,7 @@ class GaussianDiffusionSampler(nn.Module):
             print('cfg method is used and y is not None. ')
             y = torch.tensor(selected_labels).to(x_T.device)
             print('y', y)
+            print(y.shape[0], x_t.shape[0])
 
         elif method == 'cfg' and y is None:
             print('cfg method is used and y randomly sampled. ')
