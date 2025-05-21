@@ -157,6 +157,9 @@ def evaluate(sampler, model, sampled):
                 all_labels = dataset.targets
                 print('Use same label to evaluate dataset {} contains {} images with {} classes'.format(
                     FLAGS.data_type, len(all_labels), len(np.unique(all_labels))))
+                # stop here
+                raise ValueError('Use same label to evaluate dataset {} contains {} images with {} classes'.format(
+                    FLAGS.data_type, len(all_labels), len(np.unique(all_labels))))
             for i in trange(0, FLAGS.num_images, FLAGS.batch_size, desc=desc):
                 batch_size = min(FLAGS.batch_size, FLAGS.num_images - i)
                 x_T = torch.randn((batch_size, 3, FLAGS.img_size, FLAGS.img_size))
