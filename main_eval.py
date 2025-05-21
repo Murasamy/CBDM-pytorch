@@ -171,7 +171,8 @@ def evaluate(sampler, model, sampled):
                 else:
                     selected_labels = None
                 
-                print('x_T', x_T.shape) # (64, 3, 32, 32)
+                print('x_T', x_T.shape) # torch.Size([64, 3, 32, 32])
+                print("batch_size", batch_size)
                 batch_images, batch_labels = sampler(x_T.to(device),
                                                      omega=FLAGS.omega,
                                                      method=FLAGS.sample_method,

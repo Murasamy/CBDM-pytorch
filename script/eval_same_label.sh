@@ -1,4 +1,5 @@
-python main_eval.py \
+# only use cuda1
+CUDA_VISIBLE_DEVICES=0 python main_eval.py \
     --flagfile ./logs/cifar100lt_ddpm_cond/flagfile.txt \
     --logdir ./logs/cifar100lt_ddpm_cond \
     --fid_cache ./stats/cifar100.train.npz \
@@ -8,4 +9,6 @@ python main_eval.py \
     --eval \
     --same_label True \
     --sample_method cfg  --omega 0.8 \
-    --data_type cifar100lt
+    --data_type cifar100lt8 \
+    --data_type cifar10lt
+
