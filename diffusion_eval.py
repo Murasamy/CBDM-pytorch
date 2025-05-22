@@ -176,7 +176,8 @@ class GaussianDiffusionSampler(nn.Module):
         if omega > 0 and (method == 'cfg'):
             unc_eps = self.model(x_t, t, y=None, augm=None)
             guide = eps - unc_eps
-            eps = eps + omega * guide
+            # eps = eps + omega * guide
+            eps = (1 - omega) * eps + omega * guide
         
         x_0 = self.predict_xstart_from_eps(x_t, t, eps=eps)
         model_mean, _ = self.q_mean_variance(x_0, x_t, t)
