@@ -199,7 +199,8 @@ class GaussianDiffusionSampler(nn.Module):
         elif method != 'uncond' and selected_labels is not None: 
             # use the same label as the training set
             print('cfg method is used and y is not None. ')
-            y = torch.tensor(selected_labels).to(x_T.device)
+            # y = torch.tensor(selected_labels).to(x_T.device)
+            y = selected_labels.clone().to(x_T.device)
             print('y', y)
 
         elif method == 'cfg' and y is None:

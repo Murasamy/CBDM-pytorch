@@ -85,6 +85,13 @@ flags.DEFINE_string('finetuned_logdir', '', help='logdir for the new model, wher
                      the pretrained model')
 flags.DEFINE_integer('ckpt_step', 0, help='step to reload the pretained checkpoint')
 
+# Knowledge Sharing via Unconditional Training at Lower Resolutions
+flags.DEFINE_bool('seperate_upsampler', False, help='Seperate upsampling from the denoising process')
+flags.DEFINE_integer('seperate_unconditional_step', 0, help='Step to load the unconditional model')
+flags.DEFINE_integer('seperate_upsampler_step', 0, help='Step to load the upsampler model')
+flags.DEFINE_bool('freeze_down_latent_label', False, help='Freeze the downsampling layers and train the upsampler')
+
+
 device = torch.device('cuda:0')
 
 
