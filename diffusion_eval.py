@@ -195,6 +195,7 @@ class GaussianDiffusionSampler(nn.Module):
         # print('selected_labels', selected_labels.shape) # torch.Size([16, 3, 32, 32])
 
         if method == 'uncond':
+            print('uncond method is used. ')
             y = None
         elif method != 'uncond' and selected_labels is not None: 
             # use the same label as the training set

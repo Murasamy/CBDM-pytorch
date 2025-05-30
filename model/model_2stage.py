@@ -262,6 +262,7 @@ class UNet(nn.Module):
     def forward(self, x, t, y=None, augm=None):
 
         if not self.freeze_down_latent_label:
+            print("Not freeze down latent label")
             # Timestep embedding
             temb = self.time_embedding(t)
 
@@ -291,6 +292,7 @@ class UNet(nn.Module):
                 h = layer(h, temb)
 
         elif self.freeze_down_latent_label:
+            print("Freeze down latent label")
             temb = self.time_embedding(t)
             temb_mixed = temb.clone()
 

@@ -131,12 +131,67 @@ def evaluate(sampler, model, sampled):
             images = []
             labels = []
             desc = 'generating images'
+            if FLAGS.same_label:      
+                # use the same labels as the training dataset
+                if FLAGS.data_type == 'cifar10':
+                    dataset = CIFAR10(
+                            root=FLAGS.root,
+                            train=True,
+                            download=True,
+                            )
+                elif FLAGS.data_type == 'cifar100':
+                    dataset = CIFAR100(
+                            root=FLAGS.root,
+                            # root='...',
+                            train=True,
+                            download=True,
+                            )
+                elif FLAGS.data_type == 'cifar10lt':
+                    dataset = ImbalanceCIFAR10(
+                            root=FLAGS.root,
+                            imb_type='exp',
+                            imb_factor=FLAGS.imb_factor,
+                            rand_number=0,
+                            train=True,
+                            # transform=tran_transform,
+                            target_transform=None,
+                            download=True)
+                elif FLAGS.data_type == 'cifar100lt':
+                    dataset = ImbalanceCIFAR100(
+                            root=FLAGS.root,
+                            # root='...',
+                            imb_type='exp',
+                            imb_factor=FLAGS.imb_factor,
+                            rand_number=0,
+                            train=True,
+                            # transform=tran_transform,
+                            target_transform=None,
+                            download=True)
+                all_labels = dataset.targets
+                FLAGS.num_images = len(all_labels)
+                print('num_images', FLAGS.num_images)
+                print('Use same label to evaluate dataset {} contains {} images with {} classes'.format(
+                    FLAGS.data_type, len(all_labels), len(np.unique(all_labels))))
+                
+                # stop here
+                # raise ValueError('Use same label to evaluate dataset {} contains {} images with {} classes'.format(
+                    # FLAGS.data_type, len(all_labels), len(np.unique(all_labels))))
             for i in trange(0, FLAGS.num_images, FLAGS.batch_size, desc=desc):
                 batch_size = min(FLAGS.batch_size, FLAGS.num_images - i)
                 x_T = torch.randn((batch_size, 3, FLAGS.img_size, FLAGS.img_size))
+                
+
+                if FLAGS.same_label:
+                    all_labels = dataset.targets
+                    selected_labels = all_labels[i:i+batch_size]
+                    selected_labels = torch.tensor(selected_labels)
+                else:
+                    selected_labels = None
+
                 batch_images, batch_labels = sampler(x_T.to(device),
                                                      omega=FLAGS.omega,
-                                                     method=FLAGS.sample_method)
+                                                     method=FLAGS.sample_method,
+                                                     selected_labels=selected_labels)
                 images.append((batch_images.cpu() + 1) / 2)
                 if FLAGS.sample_method!='uncond' and batch_labels is not None:
                     labels.append(batch_labels.cpu())
@@ -160,8 +215,10 @@ def evaluate(sampler, model, sampled):
             labels = np.load(os.path.join(FLAGS.logdir, '{}_{}_labels_ema_{}.npy'.format(
                                                 FLAGS.sample_method, FLAGS.omega,
                                                 FLAGS.sample_name)))
+    rand_idx = np.random.choice(len(images), 256, replace=False)
     save_image(
-        torch.tensor(images[:256]),
+        # torch.tensor(images[256:]),  # select randomly 256 images
+        torch.tensor(images[rand_idx]),      
         os.path.join(FLAGS.logdir, 'visual_ema_{}_{}_{}.png'.format(
                                     FLAGS.sample_method, FLAGS.omega, FLAGS.sample_name)),
         nrow=16)
@@ -623,10 +680,13 @@ def eval():
 
     if FLAGS.parallel:
         sampler = torch.nn.DataParallel(sampler)
-    FLAGS.sample_name = '{}_N{}_STEP{}'.format(FLAGS.sample_name, FLAGS.num_images, FLAGS.ckpt_step)
+    if FLAGS.same_label:
+        FLAGS.sample_name = '{}_same_STEP{}'.format(FLAGS.sample_name, FLAGS.ckpt_step)
+    else:
+        FLAGS.sample_name = '{}_N{}_STEP{}'.format(FLAGS.sample_name, FLAGS.num_images, FLAGS.ckpt_step)
 
     # load ema model (almost always better than the model) and evaluate
-    ckpt = torch.load(os.path.join(FLAGS.logdir, 'ckpt_{}_stage2.pt'.format(FLAGS.ckpt_step)), map_location='cpu')
+    ckpt = torch.load(os.path.join(FLAGS.logdir, 'ckpt_{}.pt'.format(FLAGS.ckpt_step)), map_location='cpu')
 
     # evaluate IS/FID
     if 'cifar100' in FLAGS.data_type:
@@ -636,7 +696,6 @@ def eval():
 
     if not FLAGS.sampled:
         model.load_state_dict(ckpt['ema_model'])
-        print("model.freeze_down_latent_label", model.freeze_down_latent_label)
     else:
         model = None
 
@@ -647,13 +706,14 @@ def eval():
     print("Improved PRD:%6.5f, RECALL:%7.5f \n" % (ipr[0], ipr[1]))
     print("PRD PRECISION FOR 100 CLASSES:%6.5f, RECALL:%7.5f \n" % (prd_score[0], prd_score[1]))
 
-    with open(os.path.join(FLAGS.logdir,  'res_ema_{}.txt'.format(FLAGS.sample_name)), 'a+') as f:
+    # with open(os.path.join(FLAGS.logdir,  'res_ema_{}.txt'.format(FLAGS.sample_name)), 'a+') as f:
+    with open(os.path.join(FLAGS.logdir,  'res_ema_{}_{}_{}.txt'.format(FLAGS.sample_method, FLAGS.omega, FLAGS.sample_name)), 'a+') as f:
+        
         f.write("Settings: NUM:{} EPOCH:{}, OMEGA:{}, METHOD:{} \n" .format (FLAGS.num_images, FLAGS.ckpt_step, FLAGS.omega,FLAGS.sample_method))
         f.write("Model(EMA): IS:%6.5f(%.5f), FID/CIFAR100:%7.5f \n" % (IS, IS_std, FID))
         f.write("Improved PRD:%6.5f, RECALL:%7.5f \n" % (ipr[0], ipr[1]))
         f.write("PRD PRECISION FOR 100 CLASSES:%6.5f, RECALL:%7.5f \n" % (prd_score[0], prd_score[1]))
     f.close()
-
 
 def main(argv):
     # suppress annoying inception_v3 initialization warning
