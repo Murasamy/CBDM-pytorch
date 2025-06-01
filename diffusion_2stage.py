@@ -251,18 +251,30 @@ class GaussianDiffusionSampler(nn.Module):
 
         return model_mean, model_log_var
 
-    def forward(self, x_T, omega=0.0, method='cfg'):
+    def forward(self, x_T, omega=0.0, method='cfg', selected_labels=None):
         """
         Algorithm 2.
         """
         x_t = x_T.clone()
         y = None
+        # print('x_T', x_T.shape) # torch.Size([16, 3, 32, 32])
+        # print('selected_labels', selected_labels.shape) # torch.Size([16, 3, 32, 32])
 
         if method == 'uncond':
+            print('uncond method is used. ')
             y = None
-        else:
-            # uniform sampling
-            y = torch.randint(0, self.num_class, (len(x_t),)).to(x_t.device)
+            
+        elif method != 'uncond' and selected_labels is not None: 
+            # use the same label as the training set
+            print('cfg method is used and y is not None. ')
+            # y = torch.tensor(selected_labels).to(x_T.device)
+            y = selected_labels.clone().to(x_T.device)
+            print('y', y)
+
+        elif method == 'cfg' and y is None:
+            print('cfg method is used and y randomly sampled. ')
+            y = torch.randint(0, self.num_class, (len(x_T),)).to(x_T.device)
+            print('y', y)
 
         with torch.no_grad():
             for time_step in tqdm(reversed(range(0, self.T)), total=self.T):
