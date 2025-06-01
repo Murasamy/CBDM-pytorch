@@ -292,7 +292,7 @@ class UNet(nn.Module):
                 h = layer(h, temb)
 
         elif self.freeze_down_latent_label:
-            print("Freeze down latent label")
+            # print("Freeze down latent label")
             temb = self.time_embedding(t)
             temb_mixed = temb.clone()
 
