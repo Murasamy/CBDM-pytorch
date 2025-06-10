@@ -298,6 +298,7 @@ def train():
             x_0 = x_0.to(device)
             y_0 = y_0.to(device)
 
+            print('request loss_ddpm and loss_addition')
             loss_ddpm, loss_addition = trainer(x_0, y_0, augm)
             print('get loss_ddpm and loss_addition')
             loss_ddpm = loss_ddpm.mean()
