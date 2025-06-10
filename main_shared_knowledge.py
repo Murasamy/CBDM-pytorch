@@ -87,7 +87,7 @@ flags.DEFINE_integer('ckpt_step', 0, help='step to reload the pretained checkpoi
 # Knowledge Sharing hyperparameters
 flags.DEFINE_bool('shared_knowledge', False, help='train with shared knowledge')
 flags.DEFINE_integer('shared_resolution', 8, help='resolution of shared knowledge')
-flags.DEFINE_integer('shared_portion', 0.1, help='portion of shared knowledge')
+flags.DEFINE_float('shared_portion', 0.1, help='portion of shared knowledge')
 
 device = torch.device('cuda:0')
 
