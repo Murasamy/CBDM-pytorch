@@ -98,6 +98,7 @@ class GaussianDiffusionTrainer(nn.Module):
         noise_downsample = self.downsample_uc(noise)
         
         loss = F.mse_loss(h, noise, reduction='none')
+        print("get loss original")
         
         if self.cb and y_0 is not None:
             loss_reg = loss_com = torch.tensor(0).to(x_t.device)
@@ -113,7 +114,7 @@ class GaussianDiffusionTrainer(nn.Module):
             return loss, loss_reg + 1/4 * loss_com
 
         if self.shared_knowledge:
-            print('shared_knowledge')
+            print('loss with shared_knowledge')
             loss_low = self.shared_portion * F.mse_loss(h_low, noise_downsample, reduction='none')
             return loss, loss_low
         
