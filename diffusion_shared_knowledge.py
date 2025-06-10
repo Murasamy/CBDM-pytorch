@@ -98,8 +98,9 @@ class GaussianDiffusionTrainer(nn.Module):
         noise_downsample = self.downsample_uc(noise)
         
         loss = F.mse_loss(h, noise, reduction='none')
-        loss_reg = loss_com = torch.tensor(0).to(x_t.device)
+        
         if self.cb and y_0 is not None:
+            loss_reg = loss_com = torch.tensor(0).to(x_t.device)
             y_bal = torch.Tensor(np.random.choice(
                                  self.num_class, size=len(x_0),
                                  p=self.weight.numpy() if not self.finetune else None,
