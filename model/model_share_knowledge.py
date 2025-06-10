@@ -377,7 +377,7 @@ class UNet(nn.Module):
                 # print(h.shape)
                 # check if the resolution equals to the shared resolution
                 if h.shape[2] == self.shared_resolution and h.shape[3] == self.shared_resolution:
-                    print("Shared resolution reached")
+                    # print("Shared resolution reached")
 
                     self.skip = nn.Sequential(
                         nn.GroupNorm(32, h.shape[1]),
@@ -401,6 +401,8 @@ class UNet(nn.Module):
             h = self.tail(h)
 
             assert len(hs) == 0
+
+            print("shared knowledge is used. ")
 
             return h, h_low
 
