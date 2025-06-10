@@ -175,13 +175,18 @@ class GaussianDiffusionSampler(nn.Module):
         augm = torch.zeros((x_t.shape[0], 9)).to(x_t.device)
 
         # Mean parameterization
-        eps = self.model(x_t, t, y=y, augm=augm)
-        if omega > 0 and (method == 'cfg'):
-            unc_eps = self.model(x_t, t, y=None, augm=None)
-            guide = eps - unc_eps
-            eps = eps + omega * guide
+        # eps = self.model(x_t, t, y=y, augm=augm)
+        # if omega > 0 and (method == 'cfg'):
+        #     unc_eps = self.model(x_t, t, y=None, augm=None)
+        #     guide = eps - unc_eps
+        #     eps = eps + omega * guide
+        # peiyang revision
+        eps_con, eps_uncon = self.model(x_t, t, y=y, augm=augm)
+        # if omega > 0 and (method == 'cfg'):
+        #     guide = eps_con - unc_eps
+        #     eps_con = eps_con + omega * guide
         
-        x_0 = self.predict_xstart_from_eps(x_t, t, eps=eps)
+        x_0 = self.predict_xstart_from_eps(x_t, t, eps=eps_con)
         model_mean, _ = self.q_mean_variance(x_0, x_t, t)
         x_0 = torch.clip(x_0, -1., 1.)
 
