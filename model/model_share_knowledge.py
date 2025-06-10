@@ -374,7 +374,7 @@ class UNet(nn.Module):
                 if isinstance(layer, ResBlock):
                     h = torch.cat([h, hs.pop()], dim=1)
                 h = layer(h, temb)
-                print(h.shape)
+                # print(h.shape)
                 # check if the resolution equals to the shared resolution
                 if h.shape[2] == self.shared_resolution and h.shape[3] == self.shared_resolution:
                     print("Shared resolution reached")
@@ -386,7 +386,7 @@ class UNet(nn.Module):
                     ).to(h.device)
 
                     h_low = self.skip(h)
-                    print(h_low.shape)
+                    # print(h_low.shape)
                     counter += 1
                     break
                 
@@ -397,7 +397,7 @@ class UNet(nn.Module):
                 if isinstance(layer, ResBlock):
                     h = torch.cat([h, hs.pop()], dim=1)
                 h = layer(h, temb_label)
-                print(h.shape)
+                # print(h.shape)
             h = self.tail(h)
 
             assert len(hs) == 0
