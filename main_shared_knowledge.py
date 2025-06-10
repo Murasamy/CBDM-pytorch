@@ -299,9 +299,10 @@ def train():
             y_0 = y_0.to(device)
 
             loss_ddpm, loss_addition = trainer(x_0, y_0, augm)
+            print('get loss_ddpm and loss_addition')
             loss_ddpm = loss_ddpm.mean()
             loss_addition = loss_addition.mean()
-            print('get loss_ddpm and loss_addition')
+            
             # loss = loss_ddpm + loss_addition if FLAGS.cb and loss_addition > 0 else loss_ddpm
             loss = loss_ddpm + loss_addition if FLAGS.shared_knowledge and loss_addition > 0 else loss_ddpm
 
