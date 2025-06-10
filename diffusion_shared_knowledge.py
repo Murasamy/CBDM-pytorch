@@ -115,7 +115,7 @@ class GaussianDiffusionTrainer(nn.Module):
 
         if self.shared_knowledge:
             loss_low = self.shared_portion * F.mse_loss(h_low, noise_downsample, reduction='none')
-            print('loss with shared_knowledge')
+            print('return loss with shared_knowledge')
             return loss, loss_low
         
         print('not shared_knowledge')
