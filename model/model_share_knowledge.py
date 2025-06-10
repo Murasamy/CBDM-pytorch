@@ -348,7 +348,7 @@ class UNet(nn.Module):
         
         for layer in self.downblocks:
             h = layer(h, temb)
-            print(h.shape)
+            # print(h.shape)
             hs.append(h)
         
         # Middle

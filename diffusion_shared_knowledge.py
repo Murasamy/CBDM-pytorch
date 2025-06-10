@@ -268,7 +268,7 @@ if __name__ == '__main__':
         resample_filter=[1, 3, 3, 1])
     
     loss_ddpm, loss_addition = trainer(x, y, None)
-    print(loss_ddpm.shape, loss_addition.shape)
+    # print(loss_ddpm.shape, loss_addition.shape)
 
     # x = torch.randn(batch_size, 3, 32, 32)
 
