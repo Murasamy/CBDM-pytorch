@@ -94,6 +94,7 @@ class GaussianDiffusionTrainer(nn.Module):
                 y_0 = None
 
         h, h_low = self.model(x_t, t, y=y_0, augm=augm)
+        print("get h, h_low")
         noise_downsample = self.downsample_uc(noise)
         
         loss = F.mse_loss(h, noise, reduction='none')
