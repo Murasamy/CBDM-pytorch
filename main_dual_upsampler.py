@@ -84,6 +84,8 @@ flags.DEFINE_string('finetuned_logdir', '', help='logdir for the new model, wher
                      the pretrained model')
 flags.DEFINE_integer('ckpt_step', 0, help='step to reload the pretained checkpoint')
 
+flags.DEFINE_float('shared_portion', 0.1, help='portion of dual sampler')
+
 device = torch.device('cuda:0')
 
 
@@ -292,10 +294,10 @@ def train():
             x_0 = x_0.to(device)
             y_0 = y_0.to(device)
 
-            loss_ddpm, loss_reg = trainer(x_0, y_0, augm)
-            loss_ddpm = loss_ddpm.mean()
-            loss_reg = loss_reg.mean()
-            loss = loss_ddpm + loss_reg if FLAGS.cb and loss_reg > 0 else loss_ddpm
+            loss_con, loss_uncon = trainer(x_0, y_0, augm)
+            loss_con = loss_con.mean()
+            loss_uncon = loss_uncon.mean()
+            loss = loss_con + loss_uncon * FLAGS.shared_portion
             loss.backward()
 
             torch.nn.utils.clip_grad_norm_(
@@ -306,8 +308,8 @@ def train():
 
             # logs
             writer.add_scalar('loss', loss, step)
-            writer.add_scalar('loss_ddpm', loss_ddpm, step)
-            writer.add_scalar('loss_reg', loss_reg, step)
+            writer.add_scalar('loss_con', loss_con, step)  # corrected loss name
+            writer.add_scalar('loss_uncon', loss_uncon, step)  # corrected loss name
             pbar.set_postfix(loss='%.5f' % loss)
 
             # sample

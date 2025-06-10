@@ -180,6 +180,7 @@ class UNet(nn.Module):
         self.downblocks = nn.ModuleList()
         chs = [ch]  # record output channel when dowmsample for upsample
         now_ch = ch
+        
         for i, mult in enumerate(ch_mult):
             out_ch = ch * mult
             for _ in range(num_res_blocks):
@@ -259,10 +260,19 @@ class UNet(nn.Module):
 
 
 if __name__ == '__main__':
+    # batch_size = 8
+    # model = UNet(
+    #     T=1000, ch=128, ch_mult=[1, 2, 2, 2], attn=[1],
+    #     num_res_blocks=2, dropout=0.1)
+    # x = torch.randn(batch_size, 3, 32, 32)
+    # t = torch.randint(1000, (batch_size, ))
+    # y = model(x, t)
     batch_size = 8
-    model = UNet(
+    net_model = UNet(
         T=1000, ch=128, ch_mult=[1, 2, 2, 2], attn=[1],
-        num_res_blocks=2, dropout=0.1)
+        num_res_blocks=2, dropout=0.1,
+        cond="cfg", augm=False, num_class=100, )
     x = torch.randn(batch_size, 3, 32, 32)
     t = torch.randint(1000, (batch_size, ))
-    y = model(x, t)
+    y = torch.randint(100, (batch_size, ))
+    pred_noise= net_model(x, t, y, None,)

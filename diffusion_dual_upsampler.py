@@ -73,21 +73,24 @@ class GaussianDiffusionTrainer(nn.Module):
             if torch.rand(1)[0] < 1/10:
                 y_0 = None
 
-        h = self.model(x_t, t, y=y_0, augm=augm)
-        loss = F.mse_loss(h, noise, reduction='none')
-        loss_reg = loss_com = torch.tensor(0).to(x_t.device)
-        if self.cb and y_0 is not None:
-            y_bal = torch.Tensor(np.random.choice(
-                                 self.num_class, size=len(x_0),
-                                 p=self.weight.numpy() if not self.finetune else None,
-                                 )).to(x_t.device).long()
+        # h = self.model(x_t, t, y=y_0, augm=augm)
+        # loss = F.mse_loss(h, noise, reduction='none')
+        # loss_reg = loss_com = torch.tensor(0).to(x_t.device)
+        # if self.cb and y_0 is not None:
+        #     y_bal = torch.Tensor(np.random.choice(
+        #                          self.num_class, size=len(x_0),
+        #                          p=self.weight.numpy() if not self.finetune else None,
+        #                          )).to(x_t.device).long()
 
-            h_bal = self.model(x_t, t, y=y_bal, augm=augm)
-            weight = t[:, None, None, None] / self.T * self.tau
-            loss_reg = weight * F.mse_loss(h, h_bal.detach(), reduction='none')
-            loss_com = weight * F.mse_loss(h.detach(), h_bal, reduction='none')
+        #     h_bal = self.model(x_t, t, y=y_bal, augm=augm)
+        #     weight = t[:, None, None, None] / self.T * self.tau
+        #     loss_reg = weight * F.mse_loss(h, h_bal.detach(), reduction='none')
+        #     loss_com = weight * F.mse_loss(h.detach(), h_bal, reduction='none')
+        h_con, h_uncon = self.model(x_t, t, y=y_0, augm=augm)
+        loss_con = F.mse_loss(h_con, noise, reduction='none')
+        loss_uncon = F.mse_loss(h_uncon, noise, reduction='none')
 
-        return loss, loss_reg + 1/4 * loss_com
+        return loss_con, loss_uncon  # returning the losses
 
 class GaussianDiffusionSampler(nn.Module):
     def __init__(self, model, beta_1, beta_T, T, num_class, img_size=32, var_type='fixedlarge'):

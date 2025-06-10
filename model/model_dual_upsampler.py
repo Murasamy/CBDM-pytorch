@@ -197,18 +197,48 @@ class UNet(nn.Module):
             ResBlock(now_ch, now_ch, tdim, dropout, attn=False),
         ])
 
+        # self.upblocks = nn.ModuleList()
+        # for i, mult in reversed(list(enumerate(ch_mult))):
+        #     out_ch = ch * mult
+        #     for _ in range(num_res_blocks + 1):
+        #         self.upblocks.append(ResBlock(
+        #             in_ch=chs.pop() + now_ch, out_ch=out_ch, tdim=tdim,
+        #             dropout=dropout, attn=(i in attn)))
+        #         now_ch = out_ch
+        #     if i != 0:
+        #         self.upblocks.append(UpSample(now_ch))
+        # assert len(chs) == 0
+
         # peiyang revsion
         self.upblocks_uncon = nn.ModuleList()
+        self.upblocks_con = nn.ModuleList()
         for i, mult in reversed(list(enumerate(ch_mult))):
             out_ch = ch * mult
             for _ in range(num_res_blocks + 1):
+                chs_temp = chs.pop()
                 self.upblocks_uncon.append(ResBlock(
-                    in_ch=chs.pop() + now_ch, out_ch=out_ch, tdim=tdim,
+                    in_ch=chs_temp + now_ch, out_ch=out_ch, tdim=tdim,
+                    dropout=dropout, attn=(i in attn)))
+                self.upblocks_con.append(ResBlock(
+                    in_ch=chs_temp + now_ch, out_ch=out_ch, tdim=tdim,
                     dropout=dropout, attn=(i in attn)))
                 now_ch = out_ch
             if i != 0:
                 self.upblocks_uncon.append(UpSample(now_ch))
+                self.upblocks_con.append(UpSample(now_ch))
         assert len(chs) == 0
+
+        # self.upblocks_uncon = nn.ModuleList()
+        # for i, mult in reversed(list(enumerate(ch_mult))):
+        #     out_ch = ch * mult
+        #     for _ in range(num_res_blocks + 1):
+        #         self.upblocks_uncon.append(ResBlock(
+        #             in_ch=chs.pop() + now_ch, out_ch=out_ch, tdim=tdim,
+        #             dropout=dropout, attn=(i in attn)))
+        #         now_ch = out_ch
+        #     if i != 0:
+        #         self.upblocks_uncon.append(UpSample(now_ch))
+        # assert len(chs) == 0
 
         self.tail_uncon = nn.Sequential(
             nn.GroupNorm(32, now_ch),
@@ -216,17 +246,17 @@ class UNet(nn.Module):
             nn.Conv2d(out_ch, 3, 3, stride=1, padding=1)
         )
 
-        self.upblocks_con = nn.ModuleList()
-        for i, mult in reversed(list(enumerate(ch_mult))):
-            out_ch = ch * mult
-            for _ in range(num_res_blocks + 1):
-                self.upblocks_con.append(ResBlock(
-                    in_ch=chs.pop() + now_ch, out_ch=out_ch, tdim=tdim,
-                    dropout=dropout, attn=(i in attn)))
-                now_ch = out_ch
-            if i != 0:
-                self.upblocks_con.append(UpSample(now_ch))
-        assert len(chs) == 0
+        # self.upblocks_con = nn.ModuleList()
+        # for i, mult in reversed(list(enumerate(ch_mult))):
+        #     out_ch = ch * mult
+        #     for _ in range(num_res_blocks + 1):
+        #         self.upblocks_con.append(ResBlock(
+        #             in_ch=chs.pop() + now_ch, out_ch=out_ch, tdim=tdim,
+        #             dropout=dropout, attn=(i in attn)))
+        #         now_ch = out_ch
+        #     if i != 0:
+        #         self.upblocks_con.append(UpSample(now_ch))
+        # assert len(chs) == 0
 
         self.tail_con = nn.Sequential(
             nn.GroupNorm(32, now_ch),
@@ -241,8 +271,10 @@ class UNet(nn.Module):
     def initialize(self):
         init.xavier_uniform_(self.head.weight)
         init.zeros_(self.head.bias)
-        init.xavier_uniform_(self.tail[-1].weight, gain=1e-5)
-        init.zeros_(self.tail[-1].bias)
+        init.xavier_uniform_(self.tail_uncon[-1].weight, gain=1e-5)
+        init.zeros_(self.tail_uncon[-1].bias)
+        init.xavier_uniform_(self.tail_con[-1].weight, gain=1e-5)
+        init.zeros_(self.tail_con[-1].bias)
 
     def forward(self, x, t, y=None, augm=None):
         # Timestep embedding
@@ -277,28 +309,38 @@ class UNet(nn.Module):
         #     h = layer(h, temb)
         # h = self.tail(h)
 
-        h_uncon = h.clone()
-
-        for layer_counter in range(len(self.upblocks_uncon)):
-            layer = self.upblocks_uncon[layer_counter]
-            if isinstance(layer, ResBlock):
-                h_uncon = torch.cat([h, hs.pop()], dim=1)
-            h = layer(h, temb)
-        h = self.tail(h)
+        h_uncon = h
+        # h_uncon = h.clone()
+        h_con = h
+        
 
         # peiyang revision
-        f
+        for layer_counter in range(len(self.upblocks_uncon)):
+            layer_uncon = self.upblocks_uncon[layer_counter]
+            layer_con = self.upblocks_con[layer_counter]
+            if isinstance(layer_uncon, ResBlock) and isinstance(layer_con, ResBlock):
+                hs_temp = hs.pop()
+                h_uncon = torch.cat([h_uncon, hs_temp], dim=1)
+                h_con = torch.cat([h_con, hs_temp], dim=1)
+            h_uncon = layer_uncon(h_uncon, temb)
+            h_con = layer_con(h_con, temb_label)
+        h_uncon = self.tail_uncon(h_uncon)
+        h_con = self.tail_con(h_con)
 
-        assert len(hs) == 0
+        assert len(hs) == 0 
 
-        return h
+        return h_con, h_uncon
 
 
 if __name__ == '__main__':
     batch_size = 8
-    model = UNet(
+    net_model = UNet(
         T=1000, ch=128, ch_mult=[1, 2, 2, 2], attn=[1],
-        num_res_blocks=2, dropout=0.1)
+        num_res_blocks=2, dropout=0.1,
+        cond="cfg", augm=False, num_class=100, )
     x = torch.randn(batch_size, 3, 32, 32)
     t = torch.randint(1000, (batch_size, ))
-    y = model(x, t)
+    y = torch.randint(100, (batch_size, ))
+    h_con, h_uncon = net_model(x, t, y, None,)
+    print('h_con shape:', h_con.shape)  # should be [batch_size, 3, 32, 32]
+    print('h_uncon shape:', h_uncon.shape)  # should be [batch_size, 3, 32, 32]
