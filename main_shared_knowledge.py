@@ -238,7 +238,7 @@ def train():
         T=FLAGS.T, ch=FLAGS.ch, ch_mult=FLAGS.ch_mult, attn=FLAGS.attn,
         num_res_blocks=FLAGS.num_res_blocks, dropout=FLAGS.dropout,
         cond=FLAGS.conditional, augm=FLAGS.augm, num_class=FLAGS.num_class, shared_knowledge=FLAGS.shared_knowledge,
-        shared_repeat=FLAGS.shared_resolution).to(device)
+        shared_resolution=FLAGS.shared_resolution).to(device)
     if FLAGS.ckpt_step != 0:
         ckpt = torch.load(os.path.join(FLAGS.finetuned_logdir,
                                        'ckpt_{}.pt'.format(FLAGS.ckpt_step)), map_location='cpu')
