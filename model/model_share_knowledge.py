@@ -383,7 +383,7 @@ class UNet(nn.Module):
                         nn.GroupNorm(32, h.shape[1]),
                         Swish(),
                         nn.Conv2d(h.shape[1], 3, 3, stride=1, padding=1)
-                    )
+                    ).to(h.device)
 
                     h_low = self.skip(h)
                     print(h_low.shape)
