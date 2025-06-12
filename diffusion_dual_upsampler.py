@@ -180,6 +180,7 @@ class GaussianDiffusionSampler(nn.Module):
         #     unc_eps = self.model(x_t, t, y=None, augm=None)
         #     guide = eps - unc_eps
         #     eps = eps + omega * guide
+        
         # peiyang revision
         eps_con, eps_uncon = self.model(x_t, t, y=y, augm=augm)
         # if omega > 0 and (method == 'cfg'):
