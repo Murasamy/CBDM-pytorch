@@ -15,10 +15,10 @@ from torchvision import transforms
 
 from diffusion_dual_upsampler import GaussianDiffusionTrainer, GaussianDiffusionSampler
 from model.model_dual_upsampler import UNet
-from utils.augmentation import *
+# from utils.augmentation import *
 from dataset import ImbalanceCIFAR100, ImbalanceCIFAR10
 from score.both import get_inception_and_fid_score
-from utils.augmentation import KarrasAugmentationPipeline
+# from utils.augmentation import KarrasAugmentationPipeline
 
 
 FLAGS = flags.FLAGS
