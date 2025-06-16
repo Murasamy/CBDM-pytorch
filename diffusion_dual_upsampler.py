@@ -75,21 +75,23 @@ class GaussianDiffusionTrainer(nn.Module):
 
         # h = self.model(x_t, t, y=y_0, augm=augm)
         # loss = F.mse_loss(h, noise, reduction='none')
-        # loss_reg = loss_com = torch.tensor(0).to(x_t.device)
-        # if self.cb and y_0 is not None:
-        #     y_bal = torch.Tensor(np.random.choice(
-        #                          self.num_class, size=len(x_0),
-        #                          p=self.weight.numpy() if not self.finetune else None,
-        #                          )).to(x_t.device).long()
-
-        #     h_bal = self.model(x_t, t, y=y_bal, augm=augm)
-        #     weight = t[:, None, None, None] / self.T * self.tau
-        #     loss_reg = weight * F.mse_loss(h, h_bal.detach(), reduction='none')
-        #     loss_com = weight * F.mse_loss(h.detach(), h_bal, reduction='none')
-
+        
         h_con, h_uncon = self.model(x_t, t, y=y_0, augm=augm)
         loss_con = F.mse_loss(h_con, noise, reduction='none')
         loss_uncon = F.mse_loss(h_uncon, noise, reduction='none')
+
+        if self.cb and y_0 is not None:
+            loss_reg = loss_com = torch.tensor(0).to(x_t.device)
+            y_bal = torch.Tensor(np.random.choice(
+                                 self.num_class, size=len(x_0),
+                                 p=self.weight.numpy() if not self.finetune else None,
+                                 )).to(x_t.device).long()
+
+            h_bal, _ = self.model(x_t, t, y=y_bal, augm=augm)
+            weight = t[:, None, None, None] / self.T * self.tau
+            loss_reg = weight * F.mse_loss(h_con, h_bal.detach(), reduction='none')
+            loss_com = weight * F.mse_loss(h_con.detach(), h_bal, reduction='none')
+            loss_con = loss_con + loss_reg + 1/4 * loss_com
 
         return loss_con, loss_uncon  # returning the losses
 
