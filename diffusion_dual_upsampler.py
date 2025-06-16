@@ -69,9 +69,9 @@ class GaussianDiffusionTrainer(nn.Module):
             extract(self.sqrt_alphas_bar, t, x_0.shape) * x_0 +
             extract(self.sqrt_one_minus_alphas_bar, t, x_0.shape) * noise)
 
-        if self.cfg or self.cb:
-            if torch.rand(1)[0] < 1/10:
-                y_0 = None
+        # if self.cfg or self.cb:
+        #     if torch.rand(1)[0] < 1/10:
+        #         y_0 = None
 
         # h = self.model(x_t, t, y=y_0, augm=augm)
         # loss = F.mse_loss(h, noise, reduction='none')
@@ -86,7 +86,7 @@ class GaussianDiffusionTrainer(nn.Module):
         #     weight = t[:, None, None, None] / self.T * self.tau
         #     loss_reg = weight * F.mse_loss(h, h_bal.detach(), reduction='none')
         #     loss_com = weight * F.mse_loss(h.detach(), h_bal, reduction='none')
-        
+
         h_con, h_uncon = self.model(x_t, t, y=y_0, augm=augm)
         loss_con = F.mse_loss(h_con, noise, reduction='none')
         loss_uncon = F.mse_loss(h_uncon, noise, reduction='none')
