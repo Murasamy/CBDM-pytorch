@@ -375,10 +375,10 @@ def eval():
     ckpt = torch.load(os.path.join(FLAGS.logdir, 'ckpt_{}.pt'.format(FLAGS.ckpt_step)), map_location='cpu')
 
     # evaluate IS/FID
-    if 'cifar100' in FLAGS.data_type:
-        FLAGS.fid_cache = './stats/cifar100.train.npz'
-    else:
-        FLAGS.fid_cache = './stats/cifar10.train.npz'
+    # if 'cifar100' in FLAGS.data_type:
+    #     FLAGS.fid_cache = './stats/cifar100.train.npz'
+    # else:
+    #     FLAGS.fid_cache = './stats/cifar10.train.npz'
 
     if not FLAGS.sampled:
         model.load_state_dict(ckpt['ema_model'])
