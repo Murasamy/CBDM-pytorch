@@ -8,7 +8,7 @@ from .inception import InceptionV3
 
 
 DIM = 2048
-device = torch.device('cuda:0')
+device = torch.device('cpu') if not torch.cuda.is_available() else torch.device('cuda:0')
 
 
 def torch_cov(m, rowvar=False):
