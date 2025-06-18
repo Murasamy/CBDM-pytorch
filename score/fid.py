@@ -153,6 +153,7 @@ def get_statistics(images, num_images=None, batch_size=50, use_torch=False,
             raise ValueError(
                 "when `images` is not a list like object (e.g. generator), "
                 "`num_images` should be given")
+    print(f"Number of images: {num_images}")
 
     block_idx1 = InceptionV3.BLOCK_INDEX_BY_DIM[2048]
     model = InceptionV3([block_idx1]).to(device)
