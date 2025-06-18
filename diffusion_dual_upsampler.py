@@ -87,13 +87,17 @@ class GaussianDiffusionTrainer(nn.Module):
                                  p=self.weight.numpy() if not self.finetune else None,
                                  )).to(x_t.device).long()
 
-            h_bal, _ = self.model(x_t, t, y=y_bal, augm=augm)
+            h_bal, h_bal_uncon = self.model(x_t, t, y=y_bal, augm=augm)
             weight = t[:, None, None, None] / self.T * self.tau
             loss_reg = weight * F.mse_loss(h_con, h_bal.detach(), reduction='none')
             loss_com = weight * F.mse_loss(h_con.detach(), h_bal, reduction='none')
             loss_con = loss_con + loss_reg + 1/4 * loss_com
+            
+            loss_bal_uncon = weight * F.mse_loss(h_uncon, h_bal_uncon, reduction='none')
+            loss_uncon = loss_uncon + loss_bal_uncon
+            
 
-        return loss_con, loss_uncon  # returning the losses
+        return loss_con, loss_uncon
 
 class GaussianDiffusionSampler(nn.Module):
     def __init__(self, model, beta_1, beta_T, T, num_class, img_size=32, var_type='fixedlarge'):
