@@ -259,5 +259,5 @@ if __name__ == "__main__":
 
     # 4. Save to npz
     np.savez('./cifar100.train.npz', mu=mu, sigma=sigma)
-    print("Saved FID cache to ./stats/cifar100.train.npz")
+    print("Saved FID cache to ./cifar100.train.npz")
     
