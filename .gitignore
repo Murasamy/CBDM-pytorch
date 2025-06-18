@@ -10,3 +10,5 @@ test.py
 *.gz
 /cifar-100-python
 /stats
+/stats
+/stats
