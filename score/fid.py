@@ -227,6 +227,7 @@ if __name__ == "__main__":
     from torchvision.datasets import CIFAR10, CIFAR100
     from torchvision import transforms
     from torch.utils.data import DataLoader
+    from dataset import ImbalanceCIFAR100, ImbalanceCIFAR10
     import os
     tran_transform=transforms.Compose([
             transforms.RandomHorizontalFlip(),
