@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from scipy import linalg
+# from scipy import linalg
 from tqdm import tqdm
 from torch.nn.functional import adaptive_avg_pool2d
 
@@ -221,3 +221,43 @@ def get_fid_score(stats_cache, images, num_images=None, batch_size=50,
     if use_torch:
         fid_value = fid_value.cpu().item()
     return fid_value
+
+if __name__ == "__main__":
+    from torchvision.datasets import CIFAR10, CIFAR100
+    from torchvision import transforms
+    from torch.utils.data import DataLoader
+    import os
+    tran_transform=transforms.Compose([
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+            transforms.Resize([32, 32])
+        ])
+    dataset = CIFAR100(
+                root='.',
+                # root='...',
+                train=True,
+                download=True,
+                transform=tran_transform)
+    
+    loader = DataLoader(
+        dataset,
+        batch_size=128,
+        shuffle=False,
+        num_workers=4,
+        pin_memory=True
+    )
+
+    images = []
+    # for x, _ in loader: use tqdm to show progress
+    for x, _ in tqdm(loader, desc="Loading images", total=len(loader)):
+        images.append(x.numpy())
+    images = np.concatenate(images, axis=0)
+
+    # 3. Calculate mu and sigma using your get_statistics function
+    mu, sigma = get_statistics(images, num_images=len(images), batch_size=128, use_torch=False)
+
+    # 4. Save to npz
+    np.savez('./cifar100.train.npz', mu=mu, sigma=sigma)
+    print("Saved FID cache to ./stats/cifar100.train.npz")
+    
