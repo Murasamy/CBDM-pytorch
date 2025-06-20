@@ -13,7 +13,7 @@ from torchvision.datasets import CIFAR10, CIFAR100
 from torchvision.utils import make_grid, save_image
 from torchvision import transforms
 
-from diffusion_original import GaussianDiffusionTrainer, GaussianDiffusionSampler
+from diffusion_original_truncate import GaussianDiffusionTrainer, GaussianDiffusionSampler
 from model.model_original import UNet
 # from utils.augmentation import *
 from dataset import ImbalanceCIFAR100, ImbalanceCIFAR10
