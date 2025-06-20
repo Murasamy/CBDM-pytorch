@@ -62,7 +62,8 @@ class GaussianDiffusionTrainer(nn.Module):
         Algorithm 1.
         """
         # original codes
-        t = torch.randint(self.T, size=(x_0.shape[0], ), device=x_0.device)
+        # t = torch.randint(self.T, size=(x_0.shape[0], ), device=x_0.device)
+        t = torch.randint(700, self.T, size=(x_0.shape[0], ), device=x_0.device)
         noise = torch.randn_like(x_0) 
 
         x_t = (
